@@ -21,6 +21,8 @@ from config import APP_TITLE, APP_ICON, PAGE_ICON, CUSTOM_COLORS
 from database.supabase_manager import SupabaseManager
 from components.crud_table import CRUDTable
 from components.crud_form import CRUDForm
+from components.auth_manager import AuthManager
+from components.login_form import render_auth_guard, check_permissions
 
 # Configurazione pagina
 st.set_page_config(
@@ -165,7 +167,7 @@ def render_dashboard():
                     names=reg_counts.index,
                     title="Broker per Regolamentazione"
                 )
-                st.plotly_chart(fig_reg, use_container_width=True)
+                st.plotly_chart(fig_reg, width='stretch')
             else:
                 st.info("Nessun dato di regolamentazione disponibile")
         else:
@@ -183,7 +185,7 @@ def render_dashboard():
                     y='profit_target',
                     title="Profit Target per Prop Firm"
                 )
-                st.plotly_chart(fig_props, use_container_width=True)
+                st.plotly_chart(fig_props, width='stretch')
             else:
                 st.info("Nessun dato di performance disponibile")
         else:
@@ -203,7 +205,7 @@ def render_brokers_page():
         brokers = supabase_manager.get_brokers()
         if brokers:
             df_brokers = pd.DataFrame(brokers)
-            st.dataframe(df_brokers, use_container_width=True)
+            st.dataframe(df_brokers, width='stretch')
         else:
             st.info("Nessun broker presente nel database")
     
@@ -299,7 +301,7 @@ def render_props_page():
         props = supabase_manager.get_props()
         if props:
             df_props = pd.DataFrame(props)
-            st.dataframe(df_props, use_container_width=True)
+            st.dataframe(df_props, width='stretch')
         else:
             st.info("Nessuna prop firm presente nel database")
     
@@ -398,7 +400,7 @@ def render_wallets_page():
             # Nascondi informazioni sensibili
             if 'chiave_privata' in df_wallets.columns:
                 df_wallets = df_wallets.drop(['chiave_privata', 'frase_seed'], axis=1, errors='ignore')
-            st.dataframe(df_wallets, use_container_width=True)
+            st.dataframe(df_wallets, width='stretch')
         else:
             st.info("Nessun wallet presente nel database")
     
@@ -493,7 +495,7 @@ def render_pack_copiatori_page():
         packs = supabase_manager.get_pack_copiatori()
         if packs:
             df_packs = pd.DataFrame(packs)
-            st.dataframe(df_packs, use_container_width=True)
+            st.dataframe(df_packs, width='stretch')
         else:
             st.info("Nessun pack copiatore presente nel database")
     
@@ -596,7 +598,7 @@ def render_gruppi_pamm_page():
         gruppi = supabase_manager.get_gruppi_pamm()
         if gruppi:
             df_gruppi = pd.DataFrame(gruppi)
-            st.dataframe(df_gruppi, use_container_width=True)
+            st.dataframe(df_gruppi, width='stretch')
         else:
             st.info("Nessun gruppo PAMM presente nel database")
     
@@ -705,7 +707,7 @@ def render_incroci_page():
         incroci = supabase_manager.get_incroci()
         if incroci:
             df_incroci = pd.DataFrame(incroci)
-            st.dataframe(df_incroci, use_container_width=True)
+            st.dataframe(df_incroci, width='stretch')
         else:
             st.info("Nessun incrocio presente nel database")
     
@@ -801,6 +803,158 @@ def render_incroci_page():
                         st.error(f"❌ {message}")
                 else:
                     st.error("❌ Il nome dell'incrocio è obbligatorio")
+
+def render_users_page():
+    """Renderizza la pagina di gestione utenti"""
+    # Verifica permessi admin (solo Admin può gestire utenti)
+    check_permissions(required_roles=['Admin'])
+    
+    st.markdown("### 👤 Gestione Utenti")
+    
+    # Tabs per gestione utenti
+    tab1, tab2, tab3 = st.tabs(["👥 Lista Utenti", "➕ Nuovo Utente", "✏️ Modifica/Elimina"])
+    
+    with tab1:
+        st.markdown("#### 📋 Lista Utenti")
+        
+        # Ottieni tutti gli utenti
+        supabase_manager = SupabaseManager()
+        users = supabase_manager.get_all_users()
+        
+        if users:
+            # Crea DataFrame per visualizzazione
+            import pandas as pd
+            
+            # Prepara i dati per la visualizzazione
+            users_data = []
+            for user in users:
+                # Ottieni il nome del ruolo
+                role_name = "N/A"
+                if user.get('role_id'):
+                    role = supabase_manager.get_role_by_id(user['role_id'])
+                    if role:
+                        role_name = role['name']
+                
+                users_data.append({
+                    'ID': user['id'],
+                    'Username': user['username'],
+                    'Nome': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+                    'Email': user['email'],
+                    'Ruolo': role_name,
+                    'Attivo': '✅' if user.get('is_active') else '❌',
+                    'Admin': '✅' if user.get('is_admin') else '❌',
+                    'Ultimo Login': user.get('last_login', 'N/A')
+                })
+            
+            df = pd.DataFrame(users_data)
+            st.dataframe(df, width='stretch')
+        else:
+            st.warning("Nessun utente trovato")
+    
+    with tab2:
+        st.markdown("#### ➕ Crea Nuovo Utente")
+        
+        with st.form("create_user_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                username = st.text_input("👤 Username", placeholder="Inserisci username")
+                email = st.text_input("📧 Email", placeholder="Inserisci email")
+                password = st.text_input("🔒 Password", type="password", placeholder="Inserisci password")
+                first_name = st.text_input("👤 Nome", placeholder="Inserisci nome")
+            
+            with col2:
+                last_name = st.text_input("👤 Cognome", placeholder="Inserisci cognome")
+                phone = st.text_input("📞 Telefono", placeholder="Inserisci telefono")
+                
+                # Selezione ruolo
+                roles = supabase_manager.get_all_roles()
+                role_options = {role['name']: role['id'] for role in roles}
+                selected_role = st.selectbox("🎭 Ruolo", options=list(role_options.keys()))
+                
+                col_active, col_admin = st.columns(2)
+                with col_active:
+                    is_active = st.checkbox("✅ Attivo", value=True)
+                with col_admin:
+                    is_admin = st.checkbox("👑 Admin", value=False)
+            
+            notes = st.text_area("📝 Note", placeholder="Note aggiuntive")
+            
+            if st.form_submit_button("➕ Crea Utente", type="primary"):
+                if username and email and password:
+                    # Hash della password
+                    auth_manager = AuthManager()
+                    
+                    user_data = {
+                        'username': username,
+                        'email': email,
+                        'password_hash': auth_manager.hash_password(password),
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'phone': phone,
+                        'role_id': role_options[selected_role],
+                        'is_active': is_active,
+                        'is_admin': is_admin,
+                        'notes': notes
+                    }
+                    
+                    success, message = supabase_manager.create_user(user_data)
+                    if success:
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+                else:
+                    st.error("❌ Username, email e password sono obbligatori")
+    
+    with tab3:
+        st.markdown("#### ✏️ Modifica/Elimina Utenti")
+        
+        if users:
+            # Selezione utente
+            user_options = {f"{user['username']} ({user['first_name']} {user['last_name']})": user for user in users}
+            selected_user_name = st.selectbox("Seleziona utente da modificare/eliminare:", list(user_options.keys()))
+            
+            if selected_user_name:
+                selected_user = user_options[selected_user_name]
+                
+                st.markdown("#### 📋 Dettagli Utente Selezionato")
+                
+                # Mostra dettagli utente
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.write(f"**Username:** {selected_user['username']}")
+                    st.write(f"**Email:** {selected_user['email']}")
+                    st.write(f"**Nome:** {selected_user.get('first_name', 'N/A')} {selected_user.get('last_name', 'N/A')}")
+                    st.write(f"**Telefono:** {selected_user.get('phone', 'N/A')}")
+                
+                with col2:
+                    # Ruolo
+                    role_name = "N/A"
+                    if selected_user.get('role_id'):
+                        role = supabase_manager.get_role_by_id(selected_user['role_id'])
+                        if role:
+                            role_name = role['name']
+                    st.write(f"**Ruolo:** {role_name}")
+                    st.write(f"**Attivo:** {'✅' if selected_user.get('is_active') else '❌'}")
+                    st.write(f"**Admin:** {'✅' if selected_user.get('is_admin') else '❌'}")
+                    st.write(f"**Ultimo Login:** {selected_user.get('last_login', 'N/A')}")
+                
+                # Pulsanti azione
+                col_edit, col_delete = st.columns(2)
+                
+                with col_edit:
+                    if st.button("✏️ Modifica", width='stretch'):
+                        st.session_state['editing_user'] = selected_user
+                        st.rerun()
+                
+                with col_delete:
+                    if st.button("🗑️ Elimina", width='stretch'):
+                        st.session_state['deleting_user'] = selected_user
+                        st.rerun()
+        else:
+            st.warning("Nessun utente disponibile per la modifica")
 
 def render_settings_page():
     """Renderizza la pagina delle impostazioni"""
@@ -937,6 +1091,9 @@ def handle_delete_incrocio(incrocio_data):
 
 def main():
     """Funzione principale dell'applicazione"""
+    
+    # Verifica autenticazione
+    render_auth_guard()
     
     # Renderizza header
     render_header()
@@ -1295,6 +1452,63 @@ def main():
                 del st.session_state['deleting_incrocio']
                 st.rerun()
     
+    # Modal modifica utente
+    if 'editing_user' in st.session_state:
+        user_data = st.session_state['editing_user']
+        st.markdown("### ✏️ Modifica Utente")
+        
+        # Configurazione campi per il form
+        fields_config = {
+            'username': {'type': 'text', 'label': 'Username', 'required': True},
+            'email': {'type': 'text', 'label': 'Email', 'required': True},
+            'first_name': {'type': 'text', 'label': 'Nome'},
+            'last_name': {'type': 'text', 'label': 'Cognome'},
+            'phone': {'type': 'text', 'label': 'Telefono'},
+            'role_id': {'type': 'select', 'label': 'Ruolo', 'options': {role['name']: role['id'] for role in supabase_manager.get_all_roles()}},
+            'is_active': {'type': 'checkbox', 'label': 'Attivo'},
+            'is_admin': {'type': 'checkbox', 'label': 'Admin'},
+            'notes': {'type': 'textarea', 'label': 'Note'}
+        }
+        
+        crud_form = CRUDForm("Modifica Utente")
+        result = crud_form.render_form(
+            fields_config=fields_config,
+            data=user_data,
+            mode="edit",
+            on_submit=lambda data, mode: supabase_manager.update_user(user_data['id'], data),
+            key_prefix="edit_user"
+        )
+        
+        if st.button("❌ Annulla Modifica"):
+            del st.session_state['editing_user']
+            st.rerun()
+    
+    # Modal eliminazione utente
+    elif 'deleting_user' in st.session_state:
+        user_data = st.session_state['deleting_user']
+        st.markdown("### 🗑️ Elimina Utente")
+        
+        st.warning(f"⚠️ Sei sicuro di voler eliminare l'utente **{user_data['username']}**?")
+        st.write(f"**Nome:** {user_data.get('first_name', '')} {user_data.get('last_name', '')}")
+        st.write(f"**Email:** {user_data['email']}")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("✅ Conferma Eliminazione", type="primary"):
+                success, message = supabase_manager.delete_user(user_data['id'])
+                if success:
+                    st.success(message)
+                else:
+                    st.error(message)
+                del st.session_state['deleting_user']
+                st.rerun()
+        
+        with col2:
+            if st.button("❌ Annulla"):
+                del st.session_state['deleting_user']
+                st.rerun()
+    
     # Menu di navigazione
     from streamlit_option_menu import option_menu
     
@@ -1308,9 +1522,10 @@ def main():
             "📦 Pack Copiatori", 
             "👥 Gruppi PAMM", 
             "🔄 Incroci", 
+            "👤 Gestione Utenti",
             "⚙️ Impostazioni"
         ],
-        icons=["house", "building", "bank", "wallet", "box", "people", "arrows-collapse", "gear"],
+        icons=["house", "building", "bank", "wallet", "box", "people", "arrows-collapse", "person", "gear"],
         orientation="horizontal",
         styles={
             "container": {"padding": "0!important", "background-color": "#fafafa"},
@@ -1335,6 +1550,8 @@ def main():
         render_gruppi_pamm_page()
     elif selected == "🔄 Incroci":
         render_incroci_page()
+    elif selected == "👤 Gestione Utenti":
+        render_users_page()
     elif selected == "⚙️ Impostazioni":
         render_settings_page()
 

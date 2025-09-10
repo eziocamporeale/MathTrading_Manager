@@ -85,7 +85,7 @@ class CRUDTable:
         # Renderizza la tabella
         selected_data = st.dataframe(
             df,
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             column_config=column_config,
             key=f"{key_prefix}_main_table"
@@ -109,19 +109,19 @@ class CRUDTable:
             
             if on_view:
                 with cols[col_idx]:
-                    if st.button("👁️ Visualizza Dettagli", key=f"{key_prefix}_view", use_container_width=True):
+                    if st.button("👁️ Visualizza Dettagli", key=f"{key_prefix}_view", width='stretch'):
                         st.info("👆 Seleziona una riga nella tabella per visualizzare i dettagli")
                 col_idx += 1
             
             if on_edit:
                 with cols[col_idx]:
-                    if st.button("✏️ Modifica", key=f"{key_prefix}_edit", use_container_width=True):
+                    if st.button("✏️ Modifica", key=f"{key_prefix}_edit", width='stretch'):
                         st.info("👆 Seleziona una riga nella tabella per modificarla")
                 col_idx += 1
             
             if on_delete:
                 with cols[col_idx]:
-                    if st.button("🗑️ Elimina", key=f"{key_prefix}_delete", use_container_width=True):
+                    if st.button("🗑️ Elimina", key=f"{key_prefix}_delete", width='stretch'):
                         st.info("👆 Seleziona una riga nella tabella per eliminarla")
         
         return None
@@ -289,21 +289,21 @@ class CRUDTable:
             
             if on_view:
                 with cols[col_idx]:
-                    if st.button("👁️ Visualizza Dettagli", key=f"{key_prefix}_view_btn", use_container_width=True):
+                    if st.button("👁️ Visualizza Dettagli", key=f"{key_prefix}_view_btn", width='stretch'):
                         if on_view:
                             on_view(selected_data)
                 col_idx += 1
             
             if on_edit:
                 with cols[col_idx]:
-                    if st.button("✏️ Modifica", key=f"{key_prefix}_edit_btn", use_container_width=True):
+                    if st.button("✏️ Modifica", key=f"{key_prefix}_edit_btn", width='stretch'):
                         if on_edit:
                             on_edit(selected_data)
                 col_idx += 1
             
             if on_delete:
                 with cols[col_idx]:
-                    if st.button("🗑️ Elimina", key=f"{key_prefix}_delete_btn", use_container_width=True):
+                    if st.button("🗑️ Elimina", key=f"{key_prefix}_delete_btn", width='stretch'):
                         if on_delete:
                             on_delete(selected_data)
             
@@ -340,7 +340,7 @@ class CRUDTable:
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("✅ Conferma", key=f"{key_prefix}_confirm", use_container_width=True):
+            if st.button("✅ Conferma", key=f"{key_prefix}_confirm", width='stretch'):
                 if on_confirm:
                     result = on_confirm(confirm_data)
                     if result:
@@ -351,7 +351,7 @@ class CRUDTable:
                 return True
         
         with col2:
-            if st.button("❌ Annulla", key=f"{key_prefix}_cancel", use_container_width=True):
+            if st.button("❌ Annulla", key=f"{key_prefix}_cancel", width='stretch'):
                 st.info("Operazione annullata")
                 return False
         

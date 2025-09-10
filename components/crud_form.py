@@ -77,13 +77,13 @@ class CRUDForm:
                 submit_text = "✅ Salva" if mode == "create" else "✅ Aggiorna"
                 submit_button = st.form_submit_button(
                     submit_text,
-                    use_container_width=True
+                    width='stretch'
                 )
             
             with col2:
                 cancel_button = st.form_submit_button(
                     "❌ Annulla",
-                    use_container_width=True
+                    width='stretch'
                 )
             
             # Gestione submit
@@ -337,13 +337,13 @@ class CRUDForm:
             with col1:
                 submit_button = st.form_submit_button(
                     "✅ Salva Modifiche",
-                    use_container_width=True
+                    width='stretch'
                 )
             
             with col2:
                 cancel_button = st.form_submit_button(
                     "❌ Annulla",
-                    use_container_width=True
+                    width='stretch'
                 )
             
             if submit_button:

@@ -583,6 +583,207 @@ class SupabaseManager:
             logging.error(f"❌ Errore recupero statistiche: {e}")
             return {}
     
+    # ==================== USER MANAGEMENT ====================
+    
+    def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+        """Ottiene un utente per username"""
+        try:
+            if not self.is_configured:
+                return None
+            
+            result = self.supabase.table('users').select('*').eq('username', username).execute()
+            return result.data[0] if result.data else None
+            
+        except Exception as e:
+            logging.error(f"❌ Errore recupero utente per username: {e}")
+            return None
+    
+    def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Ottiene un utente per ID"""
+        try:
+            if not self.is_configured:
+                return None
+            
+            result = self.supabase.table('users').select('*').eq('id', user_id).execute()
+            return result.data[0] if result.data else None
+            
+        except Exception as e:
+            logging.error(f"❌ Errore recupero utente per ID: {e}")
+            return None
+    
+    def get_all_users(self) -> List[Dict[str, Any]]:
+        """Ottiene tutti gli utenti"""
+        try:
+            if not self.is_configured:
+                return []
+            
+            result = self.supabase.table('users').select('*').execute()
+            return result.data if result.data else []
+            
+        except Exception as e:
+            logging.error(f"❌ Errore recupero utenti: {e}")
+            return []
+    
+    def create_user(self, user_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Crea un nuovo utente"""
+        try:
+            if not self.is_configured:
+                return False, "❌ Supabase non configurato"
+            
+            # Rimuovi campi non necessari
+            user_data_clean = {k: v for k, v in user_data.items() if k not in ['id', 'created_at', 'updated_at']}
+            
+            result = self.supabase.table('users').insert(user_data_clean).execute()
+            
+            if result.data:
+                return True, f"✅ Utente creato con successo"
+            else:
+                return False, "❌ Errore durante la creazione dell'utente"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore creazione utente: {e}")
+            return False, f"❌ Errore: {str(e)}"
+    
+    def update_user(self, user_id: str, user_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Aggiorna un utente esistente"""
+        try:
+            if not self.is_configured:
+                return False, "❌ Supabase non configurato"
+            
+            # Rimuovi campi non modificabili
+            user_data_clean = {k: v for k, v in user_data.items() if k not in ['id', 'created_at']}
+            user_data_clean['updated_at'] = datetime.now().isoformat()
+            
+            result = self.supabase.table('users').update(user_data_clean).eq('id', user_id).execute()
+            
+            if result.data:
+                return True, f"✅ Utente aggiornato con successo"
+            else:
+                return False, "❌ Errore durante l'aggiornamento dell'utente"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore aggiornamento utente: {e}")
+            return False, f"❌ Errore: {str(e)}"
+    
+    def delete_user(self, user_id: str) -> Tuple[bool, str]:
+        """Elimina un utente"""
+        try:
+            if not self.is_configured:
+                return False, "❌ Supabase non configurato"
+            
+            result = self.supabase.table('users').delete().eq('id', user_id).execute()
+            
+            if result.data:
+                return True, f"✅ Utente eliminato con successo"
+            else:
+                return False, "❌ Errore durante l'eliminazione dell'utente"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore eliminazione utente: {e}")
+            return False, f"❌ Errore: {str(e)}"
+    
+    def update_user_last_login(self, user_id: str) -> bool:
+        """Aggiorna l'ultimo login dell'utente"""
+        try:
+            if not self.is_configured:
+                return False
+            
+            result = self.supabase.table('users').update({
+                'last_login': datetime.now().isoformat()
+            }).eq('id', user_id).execute()
+            
+            return bool(result.data)
+            
+        except Exception as e:
+            logging.error(f"❌ Errore aggiornamento ultimo login: {e}")
+            return False
+    
+    # ==================== ROLE MANAGEMENT ====================
+    
+    def get_role_by_id(self, role_id: int) -> Optional[Dict[str, Any]]:
+        """Ottiene un ruolo per ID"""
+        try:
+            if not self.is_configured:
+                return None
+            
+            result = self.supabase.table('roles').select('*').eq('id', role_id).execute()
+            return result.data[0] if result.data else None
+            
+        except Exception as e:
+            logging.error(f"❌ Errore recupero ruolo per ID: {e}")
+            return None
+    
+    def get_all_roles(self) -> List[Dict[str, Any]]:
+        """Ottiene tutti i ruoli"""
+        try:
+            if not self.is_configured:
+                return []
+            
+            result = self.supabase.table('roles').select('*').execute()
+            return result.data if result.data else []
+            
+        except Exception as e:
+            logging.error(f"❌ Errore recupero ruoli: {e}")
+            return []
+    
+    def create_role(self, role_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Crea un nuovo ruolo"""
+        try:
+            if not self.is_configured:
+                return False, "❌ Supabase non configurato"
+            
+            # Rimuovi campi non necessari
+            role_data_clean = {k: v for k, v in role_data.items() if k not in ['id', 'created_at', 'updated_at']}
+            
+            result = self.supabase.table('roles').insert(role_data_clean).execute()
+            
+            if result.data:
+                return True, f"✅ Ruolo creato con successo"
+            else:
+                return False, "❌ Errore durante la creazione del ruolo"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore creazione ruolo: {e}")
+            return False, f"❌ Errore: {str(e)}"
+    
+    def update_role(self, role_id: int, role_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Aggiorna un ruolo esistente"""
+        try:
+            if not self.is_configured:
+                return False, "❌ Supabase non configurato"
+            
+            # Rimuovi campi non modificabili
+            role_data_clean = {k: v for k, v in role_data.items() if k not in ['id', 'created_at']}
+            role_data_clean['updated_at'] = datetime.now().isoformat()
+            
+            result = self.supabase.table('roles').update(role_data_clean).eq('id', role_id).execute()
+            
+            if result.data:
+                return True, f"✅ Ruolo aggiornato con successo"
+            else:
+                return False, "❌ Errore durante l'aggiornamento del ruolo"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore aggiornamento ruolo: {e}")
+            return False, f"❌ Errore: {str(e)}"
+    
+    def delete_role(self, role_id: int) -> Tuple[bool, str]:
+        """Elimina un ruolo"""
+        try:
+            if not self.is_configured:
+                return False, "❌ Supabase non configurato"
+            
+            result = self.supabase.table('roles').delete().eq('id', role_id).execute()
+            
+            if result.data:
+                return True, f"✅ Ruolo eliminato con successo"
+            else:
+                return False, "❌ Errore durante l'eliminazione del ruolo"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore eliminazione ruolo: {e}")
+            return False, f"❌ Errore: {str(e)}"
+
     def test_connection(self) -> Tuple[bool, str]:
         """Testa la connessione a Supabase"""
         try:
@@ -600,3 +801,109 @@ class SupabaseManager:
         except Exception as e:
             logging.error(f"❌ Errore test connessione Supabase: {e}")
             return False, f"Errore connessione: {e}"
+    
+    # ==================== BROKER CRUD ====================
+    def create_broker(self, broker_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Crea un nuovo broker"""
+        try:
+            result = self.supabase.table('brokers').insert(broker_data).execute()
+            if result.data:
+                broker_id = result.data[0]['id']
+                logging.info(f"✅ Broker creato con successo: {broker_data.get('nome')}")
+                return True, f"✅ Broker creato con successo. ID: {broker_id}"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore creazione broker: {e}")
+            return False, f"❌ Errore creazione broker: {e}"
+    
+    def get_all_brokers(self) -> List[Dict[str, Any]]:
+        """Ottieni tutti i broker"""
+        try:
+            result = self.supabase.table('brokers').select('*').execute()
+            return result.data or []
+        except Exception as e:
+            logging.error(f"❌ Errore recupero broker: {e}")
+            return []
+    
+    def delete_broker(self, broker_id: int) -> Tuple[bool, str]:
+        """Elimina un broker"""
+        try:
+            result = self.supabase.table('brokers').delete().eq('id', broker_id).execute()
+            logging.info(f"✅ Broker eliminato con successo: {broker_id}")
+            return True, f"✅ Broker {broker_id} eliminato con successo"
+        except Exception as e:
+            logging.error(f"❌ Errore eliminazione broker {broker_id}: {e}")
+            return False, f"❌ Errore eliminazione broker: {e}"
+    
+    # ==================== WALLET CRUD ====================
+    def create_wallet(self, wallet_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Crea un nuovo wallet"""
+        try:
+            result = self.supabase.table('wallets').insert(wallet_data).execute()
+            if result.data:
+                wallet_id = result.data[0]['id']
+                logging.info(f"✅ Wallet creato con successo: {wallet_data.get('nome')}")
+                return True, f"✅ Wallet creato con successo. ID: {wallet_id}"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore creazione wallet: {e}")
+            return False, f"❌ Errore creazione wallet: {e}"
+    
+    def get_all_wallets(self) -> List[Dict[str, Any]]:
+        """Ottieni tutti i wallet"""
+        try:
+            result = self.supabase.table('wallets').select('*').execute()
+            return result.data or []
+        except Exception as e:
+            logging.error(f"❌ Errore recupero wallet: {e}")
+            return []
+    
+    # ==================== PACK COPIATORI CRUD ====================
+    def create_pack_copiatore(self, pack_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Crea un nuovo pack copiatore"""
+        try:
+            result = self.supabase.table('pack_copiatori').insert(pack_data).execute()
+            if result.data:
+                pack_id = result.data[0]['id']
+                logging.info(f"✅ Pack copiatore creato con successo: {pack_data.get('nome')}")
+                return True, f"✅ Pack copiatore creato con successo. ID: {pack_id}"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore creazione pack copiatore: {e}")
+            return False, f"❌ Errore creazione pack copiatore: {e}"
+    
+    def get_all_pack_copiatori(self) -> List[Dict[str, Any]]:
+        """Ottieni tutti i pack copiatori"""
+        try:
+            result = self.supabase.table('pack_copiatori').select('*').execute()
+            return result.data or []
+        except Exception as e:
+            logging.error(f"❌ Errore recupero pack copiatori: {e}")
+            return []
+    
+    # ==================== GRUPPI PAMM CRUD ====================
+    def create_gruppo_pamm(self, pamm_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Crea un nuovo gruppo PAMM"""
+        try:
+            result = self.supabase.table('gruppi_pamm').insert(pamm_data).execute()
+            if result.data:
+                pamm_id = result.data[0]['id']
+                logging.info(f"✅ Gruppo PAMM creato con successo: {pamm_data.get('nome')}")
+                return True, f"✅ Gruppo PAMM creato con successo. ID: {pamm_id}"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore creazione gruppo PAMM: {e}")
+            return False, f"❌ Errore creazione gruppo PAMM: {e}"
+    
+    def get_all_gruppi_pamm(self) -> List[Dict[str, Any]]:
+        """Ottieni tutti i gruppi PAMM"""
+        try:
+            result = self.supabase.table('gruppi_pamm').select('*').execute()
+            return result.data or []
+        except Exception as e:
+            logging.error(f"❌ Errore recupero gruppi PAMM: {e}")
+            return []
