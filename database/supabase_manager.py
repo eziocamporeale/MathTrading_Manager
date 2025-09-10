@@ -624,11 +624,35 @@ class SupabaseManager:
             logging.error(f"❌ Errore recupero utenti: {e}")
             return []
     
+    def username_exists(self, username: str, exclude_user_id: Optional[str] = None) -> bool:
+        """Verifica se un username esiste già"""
+        try:
+            if not self.is_configured:
+                return False
+            
+            query = self.supabase.table('users').select('id').eq('username', username)
+            
+            # Se stiamo modificando un utente, escludi il suo ID dalla ricerca
+            if exclude_user_id:
+                query = query.neq('id', exclude_user_id)
+            
+            result = query.execute()
+            return len(result.data) > 0
+            
+        except Exception as e:
+            logging.error(f"❌ Errore verifica username: {e}")
+            return False
+    
     def create_user(self, user_data: Dict[str, Any]) -> Tuple[bool, str]:
         """Crea un nuovo utente"""
         try:
             if not self.is_configured:
                 return False, "❌ Supabase non configurato"
+            
+            # Verifica se l'username esiste già
+            username = user_data.get('username')
+            if username and self.username_exists(username):
+                return False, f"❌ Username '{username}' già esistente. Scegli un username diverso."
             
             # Rimuovi campi non necessari
             user_data_clean = {k: v for k, v in user_data.items() if k not in ['id', 'created_at', 'updated_at']}
@@ -649,6 +673,11 @@ class SupabaseManager:
         try:
             if not self.is_configured:
                 return False, "❌ Supabase non configurato"
+            
+            # Verifica se l'username esiste già (escludendo l'utente corrente)
+            username = user_data.get('username')
+            if username and self.username_exists(username, exclude_user_id=user_id):
+                return False, f"❌ Username '{username}' già esistente. Scegli un username diverso."
             
             # Rimuovi campi non modificabili
             user_data_clean = {k: v for k, v in user_data.items() if k not in ['id', 'created_at', 'data_creazione']}
