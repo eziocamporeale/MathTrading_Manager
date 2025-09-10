@@ -1092,11 +1092,11 @@ def handle_delete_incrocio(incrocio_data):
 def main():
     """Funzione principale dell'applicazione"""
     
+    # Renderizza header (sempre visibile)
+    render_header()
+    
     # Verifica autenticazione
     render_auth_guard()
-    
-    # Renderizza header
-    render_header()
     
     # Menu di navigazione - SPOSTATO PRIMA DEI MODAL PER EVITARE PROBLEMI DOPO RERUN
     from streamlit_option_menu import option_menu
