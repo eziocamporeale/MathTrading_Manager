@@ -24,9 +24,7 @@ users      | 2
 
 ### **STEP 3: Testare Login**
 1. Esegui `streamlit run app.py`
-2. Prova login con:
-   - **Admin:** `admin` / `admin123`
-   - **Demo:** `demo` / `demo123`
+2. Contatta l'amministratore per ottenere le credenziali di accesso
 
 ## 📋 **ORDINE DI ESECUZIONE SCRIPT:**
 

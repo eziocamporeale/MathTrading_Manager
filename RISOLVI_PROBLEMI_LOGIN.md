@@ -34,9 +34,7 @@ Please replace `use_container_width` with `width`.
 
 ### **STEP 2: Verificare Database**
 1. Controlla che le tabelle `users` e `roles` esistano
-2. Verifica che ci siano i dati di default:
-   - **Admin:** `admin` / `admin123`
-   - **Demo:** `demo` / `demo123`
+2. Verifica che ci siano utenti nel database (contatta l'amministratore per le credenziali)
 
 ### **STEP 3: Testare Login**
 1. Esegui `streamlit run app.py`

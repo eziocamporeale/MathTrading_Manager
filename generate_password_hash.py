@@ -13,13 +13,9 @@ def main():
     print("🔐 GENERAZIONE HASH PASSWORD")
     print("=" * 40)
     
-    # Password per admin e demo
-    admin_password = "admin123"
-    demo_password = "demo123"
-    
-    # Genera hash
-    admin_hash = generate_password_hash(admin_password)
-    demo_hash = generate_password_hash(demo_password)
+    # NOTA: Le password devono essere fornite dall'amministratore
+    print("⚠️ Questo script richiede password fornite dall'amministratore per motivi di sicurezza")
+    return
     
     print(f"\nPassword: {admin_password}")
     print(f"Hash: {admin_hash}")

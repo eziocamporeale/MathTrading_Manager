@@ -129,31 +129,21 @@ def render_login_form() -> Optional[Dict]:
         
         # Login demo
         if demo_button:
-            auth_manager = AuthManager()
-            user_data = auth_manager.login("demo", "demo123")
-            
-            if user_data:
-                st.success("✅ Accesso demo effettuato!")
-                st.rerun()
-            else:
-                st.error("❌ Errore accesso demo")
-                return None
+            st.info("🎯 Funzionalità demo non disponibile. Contatta l'amministratore per le credenziali di accesso.")
+            return None
     
     # Informazioni aggiuntive
     st.markdown("---")
     st.markdown("### ℹ️ Informazioni")
     
-    with st.expander("🔑 Credenziali di Default"):
+    with st.expander("🔑 Accesso al Sistema"):
         st.markdown("""
-        **Per il primo accesso:**
-        - **Username:** `admin`
-        - **Password:** `admin123`
+        **Per accedere al sistema:**
+        - Contatta l'amministratore per ottenere le credenziali
+        - Le credenziali vengono fornite in modo sicuro
+        - Non sono disponibili credenziali di default pubbliche
         
-        **Per test:**
-        - **Username:** `demo`
-        - **Password:** `demo123`
-        
-        ⚠️ **Importante:** Cambia le password di default dopo il primo accesso!
+        ⚠️ **Sicurezza:** Le credenziali sono personali e non devono essere condivise!
         """)
     
     with st.expander("🆘 Problemi di Accesso"):

@@ -35,9 +35,7 @@ admin | Admin | Sistema | 1 | true | true
 
 ### **STEP 4: Testare Login**
 1. Esegui `streamlit run app.py`
-2. Prova login con:
-   - **Admin:** `admin` / `admin123`
-   - **Demo:** `demo` / `demo123`
+2. Contatta l'amministratore per ottenere le credenziali di accesso
 
 ## 🎯 **RISULTATO ATTESO:**
 - ✅ Tabella `roles` creata con 6 ruoli

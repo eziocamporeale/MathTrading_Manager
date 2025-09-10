@@ -42,9 +42,7 @@ Se l'admin non ha `is_admin: true`, esegui anche `fix_admin_user.sql`:
 
 ### **STEP 3: Testare Login**
 1. Esegui `streamlit run app.py`
-2. Prova login con:
-   - **Admin:** `admin` / `admin123`
-   - **Demo:** `demo` / `demo123`
+2. Contatta l'amministratore per ottenere le credenziali di accesso
 
 ## 🔍 **SE PERSISTONO ERRORI:**
 
