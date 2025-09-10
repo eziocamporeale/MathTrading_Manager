@@ -651,8 +651,9 @@ class SupabaseManager:
                 return False, "❌ Supabase non configurato"
             
             # Rimuovi campi non modificabili
-            user_data_clean = {k: v for k, v in user_data.items() if k not in ['id', 'created_at']}
-            user_data_clean['updated_at'] = datetime.now().isoformat()
+            user_data_clean = {k: v for k, v in user_data.items() if k not in ['id', 'created_at', 'data_creazione']}
+            # Usa data_aggiornamento invece di updated_at (colonna corretta nel database)
+            user_data_clean['data_aggiornamento'] = datetime.now().isoformat()
             
             result = self.supabase.table('users').update(user_data_clean).eq('id', user_id).execute()
             
