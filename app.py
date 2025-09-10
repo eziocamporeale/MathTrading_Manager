@@ -1098,6 +1098,41 @@ def main():
     # Renderizza header
     render_header()
     
+    # Menu di navigazione - SPOSTATO PRIMA DEI MODAL PER EVITARE PROBLEMI DOPO RERUN
+    from streamlit_option_menu import option_menu
+    
+    # Mantieni la selezione del menu anche dopo rerun
+    if 'selected_menu' not in st.session_state:
+        st.session_state['selected_menu'] = "📊 Dashboard"
+    
+    selected = option_menu(
+        menu_title=None,
+        options=[
+            "📊 Dashboard", 
+            "🏢 Broker", 
+            "🏛️ Prop Firm", 
+            "💰 Wallet", 
+            "📦 Pack Copiatori", 
+            "👥 Gruppi PAMM", 
+            "🔄 Incroci", 
+            "👤 Gestione Utenti",
+            "⚙️ Impostazioni"
+        ],
+        icons=["house", "building", "bank", "wallet", "box", "people", "arrows-collapse", "person", "gear"],
+        orientation="horizontal",
+        default_index=0,  # Default al Dashboard
+        styles={
+            "container": {"padding": "0!important", "background-color": "#fafafa"},
+            "icon": {"color": "orange", "font-size": "18px"},
+            "nav-link": {"font-size": "16px", "text-align": "left", "margin": "0px", "--hover-color": "#eee"},
+            "nav-link-selected": {"background-color": "#02ab21"},
+        },
+        key="main_navigation_menu"  # Chiave unica per il menu
+    )
+    
+    # Aggiorna lo stato del menu selezionato
+    st.session_state['selected_menu'] = selected
+    
     # Gestione modal di modifica ed eliminazione
     supabase_manager = SupabaseManager()
     
@@ -1150,6 +1185,8 @@ def main():
                 if success:
                     st.success(f"✅ {message}")
                     del st.session_state['deleting_broker']
+                    # Mantieni la sezione corrente dopo eliminazione
+                    st.session_state['selected_menu'] = "🏢 Broker"
                     st.rerun()
                 else:
                     st.error(f"❌ {message}")
@@ -1208,6 +1245,8 @@ def main():
                 if success:
                     st.success(f"✅ {message}")
                     del st.session_state['deleting_prop']
+                    # Mantieni la sezione corrente dopo eliminazione
+                    st.session_state['selected_menu'] = "🏛️ Prop Firm"
                     st.rerun()
                 else:
                     st.error(f"❌ {message}")
@@ -1265,6 +1304,8 @@ def main():
                 if success:
                     st.success(f"✅ {message}")
                     del st.session_state['deleting_wallet']
+                    # Mantieni la sezione corrente dopo eliminazione
+                    st.session_state['selected_menu'] = "💰 Wallet"
                     st.rerun()
                 else:
                     st.error(f"❌ {message}")
@@ -1324,6 +1365,8 @@ def main():
                 if success:
                     st.success(f"✅ {message}")
                     del st.session_state['deleting_pack']
+                    # Mantieni la sezione corrente dopo eliminazione
+                    st.session_state['selected_menu'] = "📦 Pack Copiatori"
                     st.rerun()
                 else:
                     st.error(f"❌ {message}")
@@ -1384,6 +1427,8 @@ def main():
                 if success:
                     st.success(f"✅ {message}")
                     del st.session_state['deleting_gruppo']
+                    # Mantieni la sezione corrente dopo eliminazione
+                    st.session_state['selected_menu'] = "👥 Gruppi PAMM"
                     st.rerun()
                 else:
                     st.error(f"❌ {message}")
@@ -1443,6 +1488,8 @@ def main():
                 if success:
                     st.success(f"✅ {message}")
                     del st.session_state['deleting_incrocio']
+                    # Mantieni la sezione corrente dopo eliminazione
+                    st.session_state['selected_menu'] = "🔄 Incroci"
                     st.rerun()
                 else:
                     st.error(f"❌ {message}")
@@ -1508,32 +1555,6 @@ def main():
             if st.button("❌ Annulla"):
                 del st.session_state['deleting_user']
                 st.rerun()
-    
-    # Menu di navigazione
-    from streamlit_option_menu import option_menu
-    
-    selected = option_menu(
-        menu_title=None,
-        options=[
-            "📊 Dashboard", 
-            "🏢 Broker", 
-            "🏛️ Prop Firm", 
-            "💰 Wallet", 
-            "📦 Pack Copiatori", 
-            "👥 Gruppi PAMM", 
-            "🔄 Incroci", 
-            "👤 Gestione Utenti",
-            "⚙️ Impostazioni"
-        ],
-        icons=["house", "building", "bank", "wallet", "box", "people", "arrows-collapse", "person", "gear"],
-        orientation="horizontal",
-        styles={
-            "container": {"padding": "0!important", "background-color": "#fafafa"},
-            "icon": {"color": "orange", "font-size": "18px"},
-            "nav-link": {"font-size": "16px", "text-align": "left", "margin": "0px", "--hover-color": "#eee"},
-            "nav-link-selected": {"background-color": "#02ab21"},
-        }
-    )
     
     # Contenuto principale basato sulla selezione
     if selected == "📊 Dashboard":
