@@ -1505,13 +1505,25 @@ def main():
         st.markdown("### ✏️ Modifica Utente")
         
         # Configurazione campi per il form
+        roles = supabase_manager.get_all_roles()
+        role_options = {role['name']: role['id'] for role in roles}
+        
+        # Converti role_id in nome del ruolo per la visualizzazione iniziale
+        user_data_display = user_data.copy()
+        if user_data.get('role_id'):
+            # Trova il nome del ruolo corrispondente all'ID
+            for role in roles:
+                if role['id'] == user_data['role_id']:
+                    user_data_display['role_id'] = role['name']
+                    break
+        
         fields_config = {
             'username': {'type': 'text', 'label': 'Username', 'required': True},
             'email': {'type': 'text', 'label': 'Email', 'required': True},
             'first_name': {'type': 'text', 'label': 'Nome'},
             'last_name': {'type': 'text', 'label': 'Cognome'},
             'phone': {'type': 'text', 'label': 'Telefono'},
-            'role_id': {'type': 'select', 'label': 'Ruolo', 'options': {role['name']: role['id'] for role in supabase_manager.get_all_roles()}},
+            'role_id': {'type': 'select', 'label': 'Ruolo', 'options': role_options},
             'is_active': {'type': 'checkbox', 'label': 'Attivo'},
             'is_admin': {'type': 'checkbox', 'label': 'Admin'},
             'notes': {'type': 'textarea', 'label': 'Note'}
@@ -1520,7 +1532,7 @@ def main():
         crud_form = CRUDForm("Modifica Utente")
         result = crud_form.render_form(
             fields_config=fields_config,
-            data=user_data,
+            data=user_data_display,
             mode="edit",
             on_submit=lambda data, mode: supabase_manager.update_user(user_data['id'], data),
             key_prefix="edit_user"

@@ -171,18 +171,45 @@ class CRUDForm:
             )
         
         elif field_type == 'select':
-            # Se non c'è valore iniziale, usa il primo della lista
-            index = 0
-            if initial_value and initial_value in field_options:
-                index = field_options.index(initial_value)
-            
-            return st.selectbox(
-                display_label,
-                options=field_options,
-                index=index,
-                help=field_help,
-                key=f"{key_prefix}_{field_name}"
-            )
+            # Gestisci sia liste che dizionari come opzioni
+            if isinstance(field_options, dict):
+                # Se è un dizionario, mostra le chiavi ma restituisce i valori
+                option_keys = list(field_options.keys())
+                option_values = list(field_options.values())
+                
+                # Trova l'indice del valore iniziale
+                index = 0
+                if initial_value is not None:
+                    # Se initial_value è una chiave, trova il suo indice
+                    if initial_value in option_keys:
+                        index = option_keys.index(initial_value)
+                    # Se initial_value è un valore, trova la chiave corrispondente
+                    elif initial_value in option_values:
+                        index = option_values.index(initial_value)
+                
+                selected_key = st.selectbox(
+                    display_label,
+                    options=option_keys,
+                    index=index,
+                    help=field_help,
+                    key=f"{key_prefix}_{field_name}"
+                )
+                
+                # Restituisce il valore corrispondente alla chiave selezionata
+                return field_options[selected_key]
+            else:
+                # Se è una lista, comportamento normale
+                index = 0
+                if initial_value and initial_value in field_options:
+                    index = field_options.index(initial_value)
+                
+                return st.selectbox(
+                    display_label,
+                    options=field_options,
+                    index=index,
+                    help=field_help,
+                    key=f"{key_prefix}_{field_name}"
+                )
         
         elif field_type == 'multiselect':
             # Per multiselect, il valore iniziale deve essere una lista
