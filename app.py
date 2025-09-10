@@ -1157,11 +1157,25 @@ def main():
         }
         
         crud_form = CRUDForm("Modifica Broker")
+        
+        def handle_broker_update(form_data, mode):
+            """Gestisce l'aggiornamento broker e chiude il modal se riuscito"""
+            success, message = supabase_manager.update_broker(broker_data['id'], form_data)
+            if success:
+                # Chiudi il modal di modifica
+                del st.session_state['editing_broker']
+                st.success(message)
+                st.rerun()
+                return True
+            else:
+                st.error(message)
+                return False
+        
         result = crud_form.render_form(
             fields_config=fields_config,
             data=broker_data,
             mode="edit",
-            on_submit=lambda data, mode: supabase_manager.update_broker(broker_data['id'], data),
+            on_submit=handle_broker_update,
             key_prefix="edit_broker"
         )
         
@@ -1217,11 +1231,25 @@ def main():
         }
         
         crud_form = CRUDForm("Modifica Prop Firm")
+        
+        def handle_prop_update(form_data, mode):
+            """Gestisce l'aggiornamento prop firm e chiude il modal se riuscito"""
+            success, message = supabase_manager.update_prop(prop_data['id'], form_data)
+            if success:
+                # Chiudi il modal di modifica
+                del st.session_state['editing_prop']
+                st.success(message)
+                st.rerun()
+                return True
+            else:
+                st.error(message)
+                return False
+        
         result = crud_form.render_form(
             fields_config=fields_config,
             data=prop_data,
             mode="edit",
-            on_submit=lambda data, mode: supabase_manager.update_prop(prop_data['id'], data),
+            on_submit=handle_prop_update,
             key_prefix="edit_prop"
         )
         
@@ -1276,11 +1304,25 @@ def main():
         }
         
         crud_form = CRUDForm("Modifica Wallet")
+        
+        def handle_wallet_update(form_data, mode):
+            """Gestisce l'aggiornamento wallet e chiude il modal se riuscito"""
+            success, message = supabase_manager.update_wallet(wallet_data['id'], form_data)
+            if success:
+                # Chiudi il modal di modifica
+                del st.session_state['editing_wallet']
+                st.success(message)
+                st.rerun()
+                return True
+            else:
+                st.error(message)
+                return False
+        
         result = crud_form.render_form(
             fields_config=fields_config,
             data=wallet_data,
             mode="edit",
-            on_submit=lambda data, mode: supabase_manager.update_wallet(wallet_data['id'], data),
+            on_submit=handle_wallet_update,
             key_prefix="edit_wallet"
         )
         
@@ -1337,11 +1379,25 @@ def main():
         }
         
         crud_form = CRUDForm("Modifica Pack Copiatore")
+        
+        def handle_pack_update(form_data, mode):
+            """Gestisce l'aggiornamento pack copiatore e chiude il modal se riuscito"""
+            success, message = supabase_manager.update_pack_copiatore(pack_data['id'], form_data)
+            if success:
+                # Chiudi il modal di modifica
+                del st.session_state['editing_pack']
+                st.success(message)
+                st.rerun()
+                return True
+            else:
+                st.error(message)
+                return False
+        
         result = crud_form.render_form(
             fields_config=fields_config,
             data=pack_data,
             mode="edit",
-            on_submit=lambda data, mode: supabase_manager.update_pack_copiatore(pack_data['id'], data),
+            on_submit=handle_pack_update,
             key_prefix="edit_pack"
         )
         
@@ -1399,11 +1455,25 @@ def main():
         }
         
         crud_form = CRUDForm("Modifica Gruppo PAMM")
+        
+        def handle_gruppo_update(form_data, mode):
+            """Gestisce l'aggiornamento gruppo PAMM e chiude il modal se riuscito"""
+            success, message = supabase_manager.update_gruppo_pamm(gruppo_data['id'], form_data)
+            if success:
+                # Chiudi il modal di modifica
+                del st.session_state['editing_gruppo']
+                st.success(message)
+                st.rerun()
+                return True
+            else:
+                st.error(message)
+                return False
+        
         result = crud_form.render_form(
             fields_config=fields_config,
             data=gruppo_data,
             mode="edit",
-            on_submit=lambda data, mode: supabase_manager.update_gruppo_pamm(gruppo_data['id'], data),
+            on_submit=handle_gruppo_update,
             key_prefix="edit_gruppo"
         )
         
@@ -1460,11 +1530,25 @@ def main():
         }
         
         crud_form = CRUDForm("Modifica Incrocio")
+        
+        def handle_incrocio_update(form_data, mode):
+            """Gestisce l'aggiornamento incrocio e chiude il modal se riuscito"""
+            success, message = supabase_manager.update_incrocio(incrocio_data['id'], form_data)
+            if success:
+                # Chiudi il modal di modifica
+                del st.session_state['editing_incrocio']
+                st.success(message)
+                st.rerun()
+                return True
+            else:
+                st.error(message)
+                return False
+        
         result = crud_form.render_form(
             fields_config=fields_config,
             data=incrocio_data,
             mode="edit",
-            on_submit=lambda data, mode: supabase_manager.update_incrocio(incrocio_data['id'], data),
+            on_submit=handle_incrocio_update,
             key_prefix="edit_incrocio"
         )
         
@@ -1530,11 +1614,25 @@ def main():
         }
         
         crud_form = CRUDForm("Modifica Utente")
+        
+        def handle_user_update(form_data, mode):
+            """Gestisce l'aggiornamento utente e chiude il modal se riuscito"""
+            success, message = supabase_manager.update_user(user_data['id'], form_data)
+            if success:
+                # Chiudi il modal di modifica
+                del st.session_state['editing_user']
+                st.success(message)
+                st.rerun()
+                return True
+            else:
+                st.error(message)
+                return False
+        
         result = crud_form.render_form(
             fields_config=fields_config,
             data=user_data_display,
             mode="edit",
-            on_submit=lambda data, mode: supabase_manager.update_user(user_data['id'], data),
+            on_submit=handle_user_update,
             key_prefix="edit_user"
         )
         
