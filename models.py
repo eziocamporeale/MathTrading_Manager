@@ -185,6 +185,7 @@ class GruppiPAMM:
     commissioni_percentuale: float = 25.0  # Commissioni fisse 25%
     credenziali_broker: str = ""  # Credenziali broker (crittografate)
     credenziali_prop: str = ""  # Credenziali prop firm (crittografate)
+    chi_ha_comprato_prop: str = ""  # Chi ha comprato prop (es. "MATTEO", "MARCO")
     responsabili_gruppo: str = ""  # Responsabili identificati (es. "frank andre", "mario")
     numero_membri_gruppo: int = 0  # Numero membri gruppo (es. 12k, 10k, 7k)
 

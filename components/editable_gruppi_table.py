@@ -75,28 +75,36 @@ class EditableGruppiTable:
         self._render_group_editable_table(df_gruppo, nome_gruppo)
     
     def _render_group_editable_table(self, df_gruppo: pd.DataFrame, gruppo_nome: str):
-        """Rende la tabella editabile per un gruppo"""
+        """Rende la tabella editabile per un gruppo - REPLICA ESATTA DELL'EXCEL"""
         
         # Reset index per avere indici continui
         df_gruppo = df_gruppo.reset_index(drop=True)
         
-        # Crea colonne per la tabella editabile
-        col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+        # Crea colonne per la tabella editabile - TUTTE LE COLONNE DELL'EXCEL
+        cols = st.columns(14)  # 14 colonne come nell'Excel
         
-        with col1:
-            st.markdown("**Cliente**")
-        with col2:
-            st.markdown("**Stato Prop**")
-        with col3:
-            st.markdown("**Deposito PAMM**")
-        with col4:
-            st.markdown("**Ciclo #**")
-        with col5:
-            st.markdown("**Fase Prop**")
-        with col6:
-            st.markdown("**Operazione #**")
-        with col7:
-            st.markdown("**Credenziali Broker**")
+        # Header delle colonne (esattamente come nell'Excel)
+        headers = [
+            "Cliente",
+            "Deposito Pamm", 
+            "Quota Prop",
+            "Ciclo #",
+            "Fase Prop",
+            "Operazione #",
+            "ESITO BROKER",
+            "ESITO PROP",
+            "Prelievo prop",
+            "Prelievo profit", 
+            "Commissioni 25%",
+            "Credenziali Broker",
+            "Credenziali PROP (MAI ACCESSI)",
+            "CHI HA COMPRATO PROP"
+        ]
+        
+        # Renderizza header
+        for i, header in enumerate(headers):
+            with cols[i]:
+                st.markdown(f"**{header}**")
         
         # Renderizza ogni riga editabile con chiavi uniche
         for idx, row in df_gruppo.iterrows():
@@ -105,43 +113,20 @@ class EditableGruppiTable:
         st.divider()
     
     def _render_editable_row(self, record_id: int, row: Dict[str, Any], gruppo_nome: str):
-        """Rende una riga editabile"""
+        """Rende una riga editabile - TUTTE LE 14 COLONNE DELL'EXCEL"""
         
         # Crea chiave unica usando ID del record e gruppo
         unique_key_prefix = f"{gruppo_nome}_{record_id}"
         
-        col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+        # Crea 14 colonne come nell'Excel
+        cols = st.columns(14)
         
-        with col1:
-            # Nome cliente (non editabile, solo visualizzazione)
+        with cols[0]:
+            # Cliente (non editabile, solo visualizzazione)
             cliente_display = f"{row['nome_cliente']}"
             st.text(cliente_display)
         
-        with col2:
-            # Stato Prop (dropdown editabile)
-            stato_options = ["Svolto", "Non svolto", "mancanza saldo"]
-            current_stato = row['stato_prop']
-            new_stato = st.selectbox(
-                f"stato_{unique_key_prefix}",
-                options=stato_options,
-                index=stato_options.index(current_stato) if current_stato in stato_options else 0,
-                key=f"stato_select_{unique_key_prefix}",
-                label_visibility="collapsed"
-            )
-            
-            # Applica colore condizionale
-            if new_stato == "Svolto":
-                st.markdown('<div style="background-color: #d4edda; color: #155724; padding: 5px; border-radius: 3px;">✅ Svolto</div>', unsafe_allow_html=True)
-            elif new_stato == "Non svolto":
-                st.markdown('<div style="background-color: #f8d7da; color: #721c24; padding: 5px; border-radius: 3px;">❌ Non svolto</div>', unsafe_allow_html=True)
-            elif new_stato == "mancanza saldo":
-                st.markdown('<div style="background-color: #fff3cd; color: #856404; padding: 5px; border-radius: 3px;">⚠️ Mancanza saldo</div>', unsafe_allow_html=True)
-            
-            # Salva cambiamento
-            if new_stato != current_stato:
-                self._save_change(record_id, 'stato_prop', new_stato)
-        
-        with col3:
+        with cols[1]:
             # Deposito PAMM (dropdown editabile)
             deposito_options = ["Depositata", ""]
             current_deposito = row['deposito_pamm']
@@ -163,7 +148,23 @@ class EditableGruppiTable:
             if new_deposito != current_deposito:
                 self._save_change(record_id, 'deposito_pamm', new_deposito)
         
-        with col4:
+        with cols[2]:
+            # Quota Prop (input numerico editabile)
+            current_quota = row['quota_prop'] or 1
+            new_quota = st.number_input(
+                f"quota_{unique_key_prefix}",
+                min_value=1,
+                max_value=999,
+                value=int(current_quota),
+                key=f"quota_input_{unique_key_prefix}",
+                label_visibility="collapsed"
+            )
+            
+            # Salva cambiamento
+            if new_quota != current_quota:
+                self._save_change(record_id, 'quota_prop', new_quota)
+        
+        with cols[3]:
             # Ciclo # (input numerico editabile)
             current_ciclo = row['ciclo_numero'] or 0
             new_ciclo = st.number_input(
@@ -179,7 +180,7 @@ class EditableGruppiTable:
             if new_ciclo != current_ciclo:
                 self._save_change(record_id, 'ciclo_numero', new_ciclo)
         
-        with col5:
+        with cols[4]:
             # Fase Prop (input testuale editabile)
             current_fase = row['fase_prop'] or ""
             new_fase = st.text_input(
@@ -194,7 +195,7 @@ class EditableGruppiTable:
             if new_fase != current_fase:
                 self._save_change(record_id, 'fase_prop', new_fase)
         
-        with col6:
+        with cols[5]:
             # Operazione # (input testuale editabile)
             current_operazione = row['operazione_numero'] or ""
             new_operazione = st.text_input(
@@ -209,20 +210,137 @@ class EditableGruppiTable:
             if str(new_operazione) != str(current_operazione):
                 self._save_change(record_id, 'operazione_numero', new_operazione)
         
-        with col7:
+        with cols[6]:
+            # ESITO BROKER (input testuale editabile)
+            current_esito_broker = row['esito_broker'] or ""
+            new_esito_broker = st.text_input(
+                f"esito_broker_{unique_key_prefix}",
+                value=current_esito_broker,
+                key=f"esito_broker_input_{unique_key_prefix}",
+                label_visibility="collapsed",
+                placeholder="Esito broker"
+            )
+            
+            # Salva cambiamento
+            if new_esito_broker != current_esito_broker:
+                self._save_change(record_id, 'esito_broker', new_esito_broker)
+        
+        with cols[7]:
+            # ESITO PROP (input testuale editabile)
+            current_esito_prop = row['esito_prop'] or ""
+            new_esito_prop = st.text_input(
+                f"esito_prop_{unique_key_prefix}",
+                value=current_esito_prop,
+                key=f"esito_prop_input_{unique_key_prefix}",
+                label_visibility="collapsed",
+                placeholder="Esito prop"
+            )
+            
+            # Salva cambiamento
+            if new_esito_prop != current_esito_prop:
+                self._save_change(record_id, 'esito_prop', new_esito_prop)
+        
+        with cols[8]:
+            # Prelievo prop (input numerico editabile)
+            current_prelievo_prop = row['prelievo_prop'] or 0.0
+            new_prelievo_prop = st.number_input(
+                f"prelievo_prop_{unique_key_prefix}",
+                min_value=0.0,
+                max_value=999999.99,
+                value=float(current_prelievo_prop),
+                key=f"prelievo_prop_input_{unique_key_prefix}",
+                label_visibility="collapsed",
+                format="%.2f"
+            )
+            
+            # Salva cambiamento
+            if new_prelievo_prop != current_prelievo_prop:
+                self._save_change(record_id, 'prelievo_prop', new_prelievo_prop)
+        
+        with cols[9]:
+            # Prelievo profit (input numerico editabile)
+            current_prelievo_profit = row['prelievo_profit'] or 0.0
+            new_prelievo_profit = st.number_input(
+                f"prelievo_profit_{unique_key_prefix}",
+                min_value=0.0,
+                max_value=999999.99,
+                value=float(current_prelievo_profit),
+                key=f"prelievo_profit_input_{unique_key_prefix}",
+                label_visibility="collapsed",
+                format="%.2f"
+            )
+            
+            # Salva cambiamento
+            if new_prelievo_profit != current_prelievo_profit:
+                self._save_change(record_id, 'prelievo_profit', new_prelievo_profit)
+        
+        with cols[10]:
+            # Commissioni 25% (input numerico editabile)
+            current_commissioni = row['commissioni_percentuale'] or 25.0
+            new_commissioni = st.number_input(
+                f"commissioni_{unique_key_prefix}",
+                min_value=0.0,
+                max_value=100.0,
+                value=float(current_commissioni),
+                key=f"commissioni_input_{unique_key_prefix}",
+                label_visibility="collapsed",
+                format="%.1f"
+            )
+            
+            # Applica colore condizionale
+            if new_commissioni == 25.0:
+                st.markdown('<div style="background-color: #d4edda; color: #155724; padding: 5px; border-radius: 3px;">25%</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div style="background-color: #fff3cd; color: #856404; padding: 5px; border-radius: 3px;">{:.1f}%</div>'.format(new_commissioni), unsafe_allow_html=True)
+            
+            # Salva cambiamento
+            if new_commissioni != current_commissioni:
+                self._save_change(record_id, 'commissioni_percentuale', new_commissioni)
+        
+        with cols[11]:
             # Credenziali Broker (input editabile)
-            current_credenziali = row['credenziali_broker'] or ""
-            new_credenziali = st.text_input(
-                f"credenziali_{unique_key_prefix}",
-                value=current_credenziali,
-                key=f"credenziali_input_{unique_key_prefix}",
+            current_credenziali_broker = row['credenziali_broker'] or ""
+            new_credenziali_broker = st.text_input(
+                f"credenziali_broker_{unique_key_prefix}",
+                value=current_credenziali_broker,
+                key=f"credenziali_broker_input_{unique_key_prefix}",
                 label_visibility="collapsed",
                 placeholder="Es: 6001855"
             )
             
             # Salva cambiamento
-            if new_credenziali != current_credenziali:
-                self._save_change(record_id, 'credenziali_broker', new_credenziali)
+            if new_credenziali_broker != current_credenziali_broker:
+                self._save_change(record_id, 'credenziali_broker', new_credenziali_broker)
+        
+        with cols[12]:
+            # Credenziali PROP (MAI ACCESSI) (input editabile)
+            current_credenziali_prop = row['credenziali_prop'] or ""
+            new_credenziali_prop = st.text_input(
+                f"credenziali_prop_{unique_key_prefix}",
+                value=current_credenziali_prop,
+                key=f"credenziali_prop_input_{unique_key_prefix}",
+                label_visibility="collapsed",
+                placeholder="Es: 1125804"
+            )
+            
+            # Salva cambiamento
+            if new_credenziali_prop != current_credenziali_prop:
+                self._save_change(record_id, 'credenziali_prop', new_credenziali_prop)
+        
+        with cols[13]:
+            # CHI HA COMPRATO PROP (input testuale editabile)
+            current_chi_ha_comprato = row.get('chi_ha_comprato_prop', '') or ""
+            new_chi_ha_comprato = st.text_input(
+                f"chi_ha_comprato_{unique_key_prefix}",
+                value=current_chi_ha_comprato,
+                key=f"chi_ha_comprato_input_{unique_key_prefix}",
+                label_visibility="collapsed",
+                placeholder="Es: MATTEO"
+            )
+            
+            # Salva cambiamento
+            if new_chi_ha_comprato != current_chi_ha_comprato:
+                self._save_change(record_id, 'chi_ha_comprato_prop', new_chi_ha_comprato)
     
     def _save_change(self, record_id: int, field: str, value: Any):
         """Salva un cambiamento nella session state"""
