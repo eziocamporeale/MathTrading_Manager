@@ -23,8 +23,6 @@ from components.crud_table import CRUDTable
 from components.crud_form import CRUDForm
 from components.auth_manager import AuthManager
 from components.login_form import render_auth_guard, check_permissions
-from components.gruppi_pamm_table import render_gruppi_pamm_page as render_gruppi_pamm_excel
-from components.editable_gruppi_table import render_editable_gruppi_page
 from components.gruppi_pamm_manager import render_gruppi_pamm_manager_page
 
 # Configurazione pagina
@@ -1116,14 +1114,12 @@ def main():
             "🏛️ Prop Firm", 
             "💰 Wallet", 
             "📦 Pack Copiatori", 
-            "👥 Gruppi PAMM", 
-            "📝 Tabella Editabile",
             "🏢 Gestione Gruppi",
             "🔄 Incroci", 
             "👤 Gestione Utenti",
             "⚙️ Impostazioni"
         ],
-        icons=["house", "building", "bank", "wallet", "box", "people", "edit", "building", "arrows-collapse", "person", "gear"],
+        icons=["house", "building", "bank", "wallet", "box", "building", "arrows-collapse", "person", "gear"],
         orientation="horizontal",
         default_index=0,  # Default al Dashboard
         styles={
@@ -1503,7 +1499,7 @@ def main():
                     st.success(f"✅ {message}")
                     del st.session_state['deleting_gruppo']
                     # Mantieni la sezione corrente dopo eliminazione
-                    st.session_state['selected_menu'] = "👥 Gruppi PAMM"
+                    st.session_state['selected_menu'] = "🏢 Gestione Gruppi"
                     st.rerun()
                 else:
                     st.error(f"❌ {message}")
@@ -1682,10 +1678,6 @@ def main():
         render_wallets_page()
     elif selected == "📦 Pack Copiatori":
         render_pack_copiatori_page()
-    elif selected == "👥 Gruppi PAMM":
-        render_gruppi_pamm_excel()
-    elif selected == "📝 Tabella Editabile":
-        render_editable_gruppi_page()
     elif selected == "🏢 Gestione Gruppi":
         render_gruppi_pamm_manager_page()
     elif selected == "🔄 Incroci":
