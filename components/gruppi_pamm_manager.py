@@ -35,7 +35,7 @@ class GruppiPAMMManager:
         st.markdown("Gestisci i gruppi PAMM e i loro clienti con calcoli automatici")
         
         # Tab per navigazione
-        tab1, tab2, tab3 = st.tabs(["📊 Gruppi PAMM", "👥 Clienti per Gruppo", "📈 Statistiche"])
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Gruppi PAMM", "👥 Clienti per Gruppo", "📝 Tabella Editabile", "📈 Statistiche"])
         
         with tab1:
             self._render_gruppi_tab()
@@ -44,7 +44,21 @@ class GruppiPAMMManager:
             self._render_clienti_tab()
         
         with tab3:
+            self._render_editable_table_tab()
+        
+        with tab4:
             self._render_statistiche_tab()
+    
+    def _render_editable_table_tab(self):
+        """Tab per la tabella editabile in stile Excel"""
+        
+        st.subheader("📝 Tabella Editabile - Replica Excel")
+        st.markdown("Modifica direttamente le celle come in Excel. Le modifiche vengono salvate automaticamente.")
+        
+        # Usa il componente tabella editabile esistente
+        from components.editable_gruppi_table import EditableGruppiTable
+        editable_table = EditableGruppiTable()
+        editable_table.render_editable_table()
     
     def _render_gruppi_tab(self):
         """Tab per la gestione dei gruppi PAMM"""
