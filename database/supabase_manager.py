@@ -1234,30 +1234,21 @@ class SupabaseManager:
     def get_clienti_by_gruppo(self, gruppo_id: int) -> List[Dict[str, Any]]:
         """Recupera i clienti di un gruppo specifico con informazioni del gruppo"""
         try:
-            # Query per ottenere clienti con informazioni del gruppo
-            query = self.supabase.table('clienti_gruppi_pamm').select('''
-                *,
-                gruppi_pamm_gruppi!inner(
-                    id,
-                    nome_gruppo,
-                    manager,
-                    broker_id,
-                    account_pamm,
-                    capitale_totale,
-                    numero_membri_gruppo,
-                    responsabili_gruppo,
-                    stato
-                )
-            ''').eq('gruppo_pamm_id', gruppo_id)
+            # Prima ottieni le informazioni del gruppo
+            gruppo_result = self.supabase.table('gruppi_pamm_gruppi').select('*').eq('id', gruppo_id).execute()
+            if not gruppo_result.data:
+                return []
             
-            result = query.execute()
-            if not result.data:
+            gruppo_info = gruppo_result.data[0]
+            
+            # Poi ottieni i clienti del gruppo
+            clienti_result = self.supabase.table('clienti_gruppi_pamm').select('*').eq('gruppo_pamm_id', gruppo_id).execute()
+            if not clienti_result.data:
                 return []
             
             # Trasforma i dati per compatibilità con il componente esistente
             transformed_data = []
-            for row in result.data:
-                gruppo_info = row.get('gruppi_pamm_gruppi', {})
+            for row in clienti_result.data:
                 transformed_row = {
                     'id': row['id'],
                     'nome_gruppo': gruppo_info.get('nome_gruppo', ''),
