@@ -26,8 +26,8 @@ class EditableGruppiTable:
         st.title("📊 Gruppi PAMM - Tabella Editabile")
         st.markdown("Modifica direttamente le celle come in Excel. Le modifiche vengono salvate automaticamente.")
         
-        # Carica dati
-        data = self.supabase_manager.get_gruppi_pamm()
+        # Carica dati - usa il metodo specifico per la tabella editabile
+        data = self.supabase_manager.get_all_gruppi_pamm_for_editable_table()
         if not data:
             st.warning("Nessun dato disponibile")
             return
