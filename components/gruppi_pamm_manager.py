@@ -289,10 +289,6 @@ class GruppiPAMMManager:
         # Converti in DataFrame
         df = pd.DataFrame(clienti)
         
-        # Debug: mostra le colonne disponibili
-        st.write("🔍 DEBUG - Colonne disponibili:", df.columns.tolist())
-        st.write("🔍 DEBUG - Prime righe:", df.head())
-        
         # Mostra totali del gruppo
         self._show_gruppo_totals(df)
         
