@@ -18,10 +18,8 @@ CREATE TABLE IF NOT EXISTS gruppi_pamm_gruppi (
     creato_da VARCHAR(100),
     aggiornato_da VARCHAR(100),
     
-    -- Indici per performance
-    UNIQUE(nome_gruppo, broker_id),
-    INDEX idx_gruppi_manager (manager),
-    INDEX idx_gruppi_stato (stato)
+    -- Vincoli per performance
+    UNIQUE(nome_gruppo, broker_id)
 );
 
 -- 2. Tabella per i clienti dei gruppi PAMM
@@ -49,14 +47,19 @@ CREATE TABLE IF NOT EXISTS clienti_gruppi_pamm (
     creato_da VARCHAR(100),
     aggiornato_da VARCHAR(100),
     
-    -- Indici per performance
-    INDEX idx_clienti_gruppo (gruppo_pamm_id),
-    INDEX idx_clienti_stato_prop (stato_prop),
-    INDEX idx_clienti_deposito (deposito_pamm),
-    INDEX idx_clienti_nome (nome_cliente)
+    -- Vincoli per performance
+    UNIQUE(gruppo_pamm_id, nome_cliente)
 );
 
--- 3. Inserisci alcuni gruppi di esempio
+-- 3. Crea indici per performance
+CREATE INDEX IF NOT EXISTS idx_gruppi_manager ON gruppi_pamm_gruppi(manager);
+CREATE INDEX IF NOT EXISTS idx_gruppi_stato ON gruppi_pamm_gruppi(stato);
+CREATE INDEX IF NOT EXISTS idx_clienti_gruppo ON clienti_gruppi_pamm(gruppo_pamm_id);
+CREATE INDEX IF NOT EXISTS idx_clienti_stato_prop ON clienti_gruppi_pamm(stato_prop);
+CREATE INDEX IF NOT EXISTS idx_clienti_deposito ON clienti_gruppi_pamm(deposito_pamm);
+CREATE INDEX IF NOT EXISTS idx_clienti_nome ON clienti_gruppi_pamm(nome_cliente);
+
+-- 4. Inserisci alcuni gruppi di esempio
 INSERT INTO gruppi_pamm_gruppi (
     nome_gruppo, manager, broker_id, account_pamm, 
     capitale_totale, numero_membri_gruppo, responsabili_gruppo, 
@@ -67,7 +70,7 @@ INSERT INTO gruppi_pamm_gruppi (
 ('Gruppo 3', 'fede trott|mario', 1, 'PAMM003', 7000.0, 7000, 'fede trott|mario', 'admin', 'admin')
 ON CONFLICT (nome_gruppo, broker_id) DO NOTHING;
 
--- 4. Inserisci alcuni clienti di esempio
+-- 5. Inserisci alcuni clienti di esempio
 INSERT INTO clienti_gruppi_pamm (
     gruppo_pamm_id, nome_cliente, importo_cliente, stato_prop, deposito_pamm,
     quota_prop, ciclo_numero, fase_prop, operazione_numero,
@@ -93,7 +96,7 @@ INSERT INTO clienti_gruppi_pamm (
 (3, 'MAURIZIO PETRACHI [1000]', 1000.0, 'Non svolto', '', 1, 1, '', '', '', '', 0.0, 0.0, 25.0, '', '', 'FEDE', 'admin', 'admin')
 ON CONFLICT DO NOTHING;
 
--- 5. Crea viste per calcoli automatici
+-- 6. Crea viste per calcoli automatici
 CREATE OR REPLACE VIEW gruppi_pamm_statistics AS
 SELECT 
     g.id,
@@ -112,7 +115,7 @@ FROM gruppi_pamm_gruppi g
 LEFT JOIN clienti_gruppi_pamm c ON g.id = c.gruppo_pamm_id
 GROUP BY g.id, g.nome_gruppo, g.manager, g.capitale_totale, g.numero_membri_gruppo;
 
--- 6. Funzione per aggiornare statistiche gruppo
+-- 7. Funzione per aggiornare statistiche gruppo
 CREATE OR REPLACE FUNCTION update_gruppo_statistics(gruppo_id INTEGER)
 RETURNS VOID AS $$
 BEGIN
@@ -128,7 +131,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7. Trigger per aggiornare statistiche automaticamente
+-- 8. Trigger per aggiornare statistiche automaticamente
 CREATE OR REPLACE FUNCTION trigger_update_gruppo_stats()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -142,10 +145,10 @@ CREATE TRIGGER update_gruppo_stats_on_clienti_change
     FOR EACH ROW
     EXECUTE FUNCTION trigger_update_gruppo_stats();
 
--- 8. Verifica creazione tabelle
+-- 9. Verifica creazione tabelle
 SELECT 'Tabelle create con successo!' as status;
 
--- 9. Mostra dati di esempio
+-- 10. Mostra dati di esempio
 SELECT 
     g.nome_gruppo,
     g.manager,
