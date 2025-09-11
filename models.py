@@ -136,9 +136,20 @@ class PackCopiatore:
     creato_da: str = ""
     aggiornato_da: str = ""
 
+class StatoProp(Enum):
+    """Stati prop firm per gruppi PAMM"""
+    SVOLTO = "Svolto"
+    NON_SVOLTO = "Non svolto"
+    MANCANZA_SALDO = "mancanza saldo"
+
+class DepositoPAMM(Enum):
+    """Stati deposito PAMM"""
+    DEPOSITATA = "Depositata"
+    NON_DEPOSITATA = ""
+
 @dataclass
 class GruppiPAMM:
-    """Modello per i gruppi PAMM"""
+    """Modello esteso per i gruppi PAMM basato su Excel gruppi DEF"""
     id: Optional[int] = None
     nome_gruppo: str = ""
     manager: str = ""
@@ -157,6 +168,25 @@ class GruppiPAMM:
     data_aggiornamento: datetime = field(default_factory=datetime.now)
     creato_da: str = ""
     aggiornato_da: str = ""
+    
+    # Nuovi campi basati su Excel gruppi DEF
+    nome_cliente: str = ""  # Nome completo cliente (es. "MANUEL CARINI [4000]")
+    importo_cliente: float = 0.0  # Importo tra parentesi quadre
+    stato_prop: StatoProp = StatoProp.NON_SVOLTO  # Svolto, Non svolto, mancanza saldo
+    deposito_pamm: DepositoPAMM = DepositoPAMM.NON_DEPOSITATA  # Depositata o vuoto
+    quota_prop: int = 1  # Sempre 1 nell'Excel
+    ciclo_numero: int = 0  # Numero ciclo progressivo
+    fase_prop: str = ""  # Fase prop firm
+    operazione_numero: int = 0  # Numero operazione
+    esito_broker: str = ""  # Esito broker
+    esito_prop: str = ""  # Esito prop firm
+    prelievo_prop: float = 0.0  # Importo prelievo prop
+    prelievo_profit: float = 0.0  # Importo prelievo profit
+    commissioni_percentuale: float = 25.0  # Commissioni fisse 25%
+    credenziali_broker: str = ""  # Credenziali broker (crittografate)
+    credenziali_prop: str = ""  # Credenziali prop firm (crittografate)
+    responsabili_gruppo: str = ""  # Responsabili identificati (es. "frank andre", "mario")
+    numero_membri_gruppo: int = 0  # Numero membri gruppo (es. 12k, 10k, 7k)
 
 @dataclass
 class Incroci:
@@ -274,6 +304,89 @@ def dict_to_broker(data: Dict[str, Any]) -> Broker:
         data_aggiornamento=datetime.fromisoformat(data.get('data_aggiornamento', datetime.now().isoformat())),
         creato_da=data.get('creato_da', ''),
         aggiornato_da=data.get('aggiornato_da', '')
+    )
+
+# Funzioni per GruppiPAMM esteso
+def gruppi_pamm_to_dict(gruppo: GruppiPAMM) -> Dict[str, Any]:
+    """Converte un oggetto GruppiPAMM in dizionario"""
+    return {
+        'id': gruppo.id,
+        'nome_gruppo': gruppo.nome_gruppo,
+        'manager': gruppo.manager,
+        'broker_id': gruppo.broker_id,
+        'account_pamm': gruppo.account_pamm,
+        'capitale_totale': gruppo.capitale_totale,
+        'numero_partecipanti': gruppo.numero_partecipanti,
+        'performance_totale': gruppo.performance_totale,
+        'performance_mensile': gruppo.performance_mensile,
+        'drawdown_massimo': gruppo.drawdown_massimo,
+        'commissioni_manager': gruppo.commissioni_manager,
+        'commissioni_broker': gruppo.commissioni_broker,
+        'stato': gruppo.stato.value,
+        'note': gruppo.note,
+        'data_creazione': gruppo.data_creazione.isoformat(),
+        'data_aggiornamento': gruppo.data_aggiornamento.isoformat(),
+        'creato_da': gruppo.creato_da,
+        'aggiornato_da': gruppo.aggiornato_da,
+        # Nuovi campi Excel
+        'nome_cliente': gruppo.nome_cliente,
+        'importo_cliente': gruppo.importo_cliente,
+        'stato_prop': gruppo.stato_prop.value,
+        'deposito_pamm': gruppo.deposito_pamm.value,
+        'quota_prop': gruppo.quota_prop,
+        'ciclo_numero': gruppo.ciclo_numero,
+        'fase_prop': gruppo.fase_prop,
+        'operazione_numero': gruppo.operazione_numero,
+        'esito_broker': gruppo.esito_broker,
+        'esito_prop': gruppo.esito_prop,
+        'prelievo_prop': gruppo.prelievo_prop,
+        'prelievo_profit': gruppo.prelievo_profit,
+        'commissioni_percentuale': gruppo.commissioni_percentuale,
+        'credenziali_broker': gruppo.credenziali_broker,
+        'credenziali_prop': gruppo.credenziali_prop,
+        'responsabili_gruppo': gruppo.responsabili_gruppo,
+        'numero_membri_gruppo': gruppo.numero_membri_gruppo
+    }
+
+def dict_to_gruppi_pamm(data: Dict[str, Any]) -> GruppiPAMM:
+    """Converte un dizionario in oggetto GruppiPAMM"""
+    return GruppiPAMM(
+        id=data.get('id'),
+        nome_gruppo=data.get('nome_gruppo', ''),
+        manager=data.get('manager', ''),
+        broker_id=int(data.get('broker_id', 0)),
+        account_pamm=data.get('account_pamm', ''),
+        capitale_totale=float(data.get('capitale_totale', 0.0)),
+        numero_partecipanti=int(data.get('numero_partecipanti', 0)),
+        performance_totale=float(data.get('performance_totale', 0.0)),
+        performance_mensile=float(data.get('performance_mensile', 0.0)),
+        drawdown_massimo=float(data.get('drawdown_massimo', 0.0)),
+        commissioni_manager=float(data.get('commissioni_manager', 0.0)),
+        commissioni_broker=float(data.get('commissioni_broker', 0.0)),
+        stato=GruppiPAMMState(data.get('stato', 'Attivo')),
+        note=data.get('note', ''),
+        data_creazione=datetime.fromisoformat(data.get('data_creazione', datetime.now().isoformat())),
+        data_aggiornamento=datetime.fromisoformat(data.get('data_aggiornamento', datetime.now().isoformat())),
+        creato_da=data.get('creato_da', ''),
+        aggiornato_da=data.get('aggiornato_da', ''),
+        # Nuovi campi Excel
+        nome_cliente=data.get('nome_cliente', ''),
+        importo_cliente=float(data.get('importo_cliente', 0.0)),
+        stato_prop=StatoProp(data.get('stato_prop', 'Non svolto')),
+        deposito_pamm=DepositoPAMM(data.get('deposito_pamm', '')),
+        quota_prop=int(data.get('quota_prop', 1)),
+        ciclo_numero=int(data.get('ciclo_numero', 0)),
+        fase_prop=data.get('fase_prop', ''),
+        operazione_numero=int(data.get('operazione_numero', 0)),
+        esito_broker=data.get('esito_broker', ''),
+        esito_prop=data.get('esito_prop', ''),
+        prelievo_prop=float(data.get('prelievo_prop', 0.0)),
+        prelievo_profit=float(data.get('prelievo_profit', 0.0)),
+        commissioni_percentuale=float(data.get('commissioni_percentuale', 25.0)),
+        credenziali_broker=data.get('credenziali_broker', ''),
+        credenziali_prop=data.get('credenziali_prop', ''),
+        responsabili_gruppo=data.get('responsabili_gruppo', ''),
+        numero_membri_gruppo=int(data.get('numero_membri_gruppo', 0))
     )
 
 # Funzioni simili per gli altri modelli...

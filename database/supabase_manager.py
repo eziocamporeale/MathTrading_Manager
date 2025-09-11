@@ -11,8 +11,9 @@ from datetime import datetime
 from supabase import create_client, Client
 from models import (
     Broker, PropFirm, Wallet, PackCopiatore, GruppiPAMM, Incroci, User,
-    TransazioneWallet, PerformanceHistory,
-    broker_to_dict, dict_to_broker, prop_to_dict, dict_to_prop
+    TransazioneWallet, PerformanceHistory, StatoProp, DepositoPAMM,
+    broker_to_dict, dict_to_broker, prop_to_dict, dict_to_prop,
+    gruppi_pamm_to_dict, dict_to_gruppi_pamm
 )
 
 class SupabaseManager:
@@ -470,6 +471,174 @@ class SupabaseManager:
         except Exception as e:
             logging.error(f"❌ Errore eliminazione gruppo PAMM {gruppo_id}: {e}")
             return False, str(e)
+    
+    # ==================== GRUPPI PAMM ESTESI (EXCEL-LIKE) ====================
+    
+    def create_gruppo_pamm_extended(self, gruppo: GruppiPAMM) -> Tuple[bool, str]:
+        """Crea un nuovo gruppo PAMM con tutti i campi estesi"""
+        try:
+            if not self.is_configured:
+                return False, "Supabase non configurato"
+            
+            gruppo_dict = gruppi_pamm_to_dict(gruppo)
+            gruppo_dict['data_creazione'] = datetime.now().isoformat()
+            gruppo_dict['data_aggiornamento'] = datetime.now().isoformat()
+            
+            result = self.supabase.table('gruppi_pamm').insert(gruppo_dict).execute()
+            
+            if result.data:
+                return True, f"Gruppo PAMM '{gruppo.nome_cliente}' creato con successo"
+            else:
+                return False, "Errore durante la creazione"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore creazione gruppo PAMM esteso: {e}")
+            return False, str(e)
+    
+    def get_gruppi_pamm_by_stato(self, stato_prop: StatoProp) -> List[Dict[str, Any]]:
+        """Ottiene gruppi PAMM filtrati per stato prop"""
+        try:
+            if not self.is_configured:
+                return []
+            
+            result = self.supabase.table('gruppi_pamm').select('*').eq('stato_prop', stato_prop.value).execute()
+            return result.data if result.data else []
+        except Exception as e:
+            logging.error(f"❌ Errore recupero gruppi per stato {stato_prop.value}: {e}")
+            return []
+    
+    def get_gruppi_pamm_by_gruppo(self, nome_gruppo: str) -> List[Dict[str, Any]]:
+        """Ottiene tutti i clienti di un gruppo specifico"""
+        try:
+            if not self.is_configured:
+                return []
+            
+            result = self.supabase.table('gruppi_pamm').select('*').eq('nome_gruppo', nome_gruppo).execute()
+            return result.data if result.data else []
+        except Exception as e:
+            logging.error(f"❌ Errore recupero gruppo {nome_gruppo}: {e}")
+            return []
+    
+    def get_gruppi_pamm_by_responsabile(self, responsabile: str) -> List[Dict[str, Any]]:
+        """Ottiene tutti i gruppi gestiti da un responsabile"""
+        try:
+            if not self.is_configured:
+                return []
+            
+            result = self.supabase.table('gruppi_pamm').select('*').ilike('responsabili_gruppo', f'%{responsabile}%').execute()
+            return result.data if result.data else []
+        except Exception as e:
+            logging.error(f"❌ Errore recupero gruppi per responsabile {responsabile}: {e}")
+            return []
+    
+    def update_stato_prop_bulk(self, gruppo_ids: List[int], nuovo_stato: StatoProp) -> Tuple[bool, str]:
+        """Aggiorna stato prop per multipli gruppi"""
+        try:
+            if not self.is_configured:
+                return False, "Supabase non configurato"
+            
+            update_data = {
+                'stato_prop': nuovo_stato.value,
+                'data_aggiornamento': datetime.now().isoformat()
+            }
+            
+            result = self.supabase.table('gruppi_pamm').update(update_data).in_('id', gruppo_ids).execute()
+            
+            if result.data:
+                return True, f"Stato prop aggiornato per {len(gruppo_ids)} gruppi"
+            else:
+                return False, "Errore durante l'aggiornamento bulk"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore aggiornamento bulk stato prop: {e}")
+            return False, str(e)
+    
+    def update_deposito_pamm_bulk(self, gruppo_ids: List[int], deposito: DepositoPAMM) -> Tuple[bool, str]:
+        """Aggiorna deposito PAMM per multipli gruppi"""
+        try:
+            if not self.is_configured:
+                return False, "Supabase non configurato"
+            
+            update_data = {
+                'deposito_pamm': deposito.value,
+                'data_aggiornamento': datetime.now().isoformat()
+            }
+            
+            result = self.supabase.table('gruppi_pamm').update(update_data).in_('id', gruppo_ids).execute()
+            
+            if result.data:
+                return True, f"Deposito PAMM aggiornato per {len(gruppo_ids)} gruppi"
+            else:
+                return False, "Errore durante l'aggiornamento bulk"
+                
+        except Exception as e:
+            logging.error(f"❌ Errore aggiornamento bulk deposito PAMM: {e}")
+            return False, str(e)
+    
+    def get_statistiche_gruppi(self) -> Dict[str, Any]:
+        """Ottiene statistiche aggregate dei gruppi"""
+        try:
+            if not self.is_configured:
+                return {}
+            
+            # Conta per stato prop
+            stati_result = self.supabase.table('gruppi_pamm').select('stato_prop').execute()
+            stati_data = stati_result.data if stati_result.data else []
+            
+            # Conta per deposito PAMM
+            depositi_result = self.supabase.table('gruppi_pamm').select('deposito_pamm').execute()
+            depositi_data = depositi_result.data if depositi_result.data else []
+            
+            # Calcola totali
+            totale_clienti = len(stati_data)
+            svolti = len([s for s in stati_data if s['stato_prop'] == 'Svolto'])
+            non_svolti = len([s for s in stati_data if s['stato_prop'] == 'Non svolto'])
+            mancanza_saldo = len([s for s in stati_data if s['stato_prop'] == 'mancanza saldo'])
+            depositati = len([d for d in depositi_data if d['deposito_pamm'] == 'Depositata'])
+            
+            return {
+                'totale_clienti': totale_clienti,
+                'svolti': svolti,
+                'non_svolti': non_svolti,
+                'mancanza_saldo': mancanza_saldo,
+                'depositati': depositati,
+                'percentuale_svolti': round((svolti / totale_clienti * 100) if totale_clienti > 0 else 0, 2),
+                'percentuale_depositati': round((depositati / totale_clienti * 100) if totale_clienti > 0 else 0, 2)
+            }
+            
+        except Exception as e:
+            logging.error(f"❌ Errore calcolo statistiche gruppi: {e}")
+            return {}
+    
+    def search_gruppi_pamm(self, search_term: str) -> List[Dict[str, Any]]:
+        """Ricerca gruppi PAMM per nome cliente o gruppo"""
+        try:
+            if not self.is_configured:
+                return []
+            
+            # Ricerca per nome cliente
+            result = self.supabase.table('gruppi_pamm').select('*').ilike('nome_cliente', f'%{search_term}%').execute()
+            clienti_data = result.data if result.data else []
+            
+            # Ricerca per nome gruppo
+            result = self.supabase.table('gruppi_pamm').select('*').ilike('nome_gruppo', f'%{search_term}%').execute()
+            gruppi_data = result.data if result.data else []
+            
+            # Combina e rimuovi duplicati
+            all_data = clienti_data + gruppi_data
+            unique_data = []
+            seen_ids = set()
+            
+            for item in all_data:
+                if item['id'] not in seen_ids:
+                    unique_data.append(item)
+                    seen_ids.add(item['id'])
+            
+            return unique_data
+            
+        except Exception as e:
+            logging.error(f"❌ Errore ricerca gruppi PAMM: {e}")
+            return []
     
     # ==================== INCROCI OPERATIONS ====================
     

@@ -23,6 +23,8 @@ from components.crud_table import CRUDTable
 from components.crud_form import CRUDForm
 from components.auth_manager import AuthManager
 from components.login_form import render_auth_guard, check_permissions
+from components.gruppi_pamm_table import render_gruppi_pamm_page as render_gruppi_pamm_excel
+from components.editable_gruppi_table import render_editable_gruppi_page
 
 # Configurazione pagina
 st.set_page_config(
@@ -1114,11 +1116,12 @@ def main():
             "💰 Wallet", 
             "📦 Pack Copiatori", 
             "👥 Gruppi PAMM", 
+            "📝 Tabella Editabile",
             "🔄 Incroci", 
             "👤 Gestione Utenti",
             "⚙️ Impostazioni"
         ],
-        icons=["house", "building", "bank", "wallet", "box", "people", "arrows-collapse", "person", "gear"],
+        icons=["house", "building", "bank", "wallet", "box", "people", "edit", "arrows-collapse", "person", "gear"],
         orientation="horizontal",
         default_index=0,  # Default al Dashboard
         styles={
@@ -1678,7 +1681,9 @@ def main():
     elif selected == "📦 Pack Copiatori":
         render_pack_copiatori_page()
     elif selected == "👥 Gruppi PAMM":
-        render_gruppi_pamm_page()
+        render_gruppi_pamm_excel()
+    elif selected == "📝 Tabella Editabile":
+        render_editable_gruppi_page()
     elif selected == "🔄 Incroci":
         render_incroci_page()
     elif selected == "👤 Gestione Utenti":
