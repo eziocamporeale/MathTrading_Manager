@@ -60,8 +60,8 @@ CREATE INDEX IF NOT EXISTS idx_clienti_deposito ON clienti_gruppi_pamm(deposito_
 CREATE INDEX IF NOT EXISTS idx_clienti_nome ON clienti_gruppi_pamm(nome_cliente);
 
 -- 4. Crea broker di default se non esiste
-INSERT INTO brokers (id, nome, url, api_key, note, creato_da, aggiornato_da)
-VALUES (1, 'Broker Default', 'https://default-broker.com', 'default-api-key', 'Broker di default per i test', 'admin', 'admin')
+INSERT INTO brokers (id, nome_broker, sito_web, note, data_creazione, data_aggiornamento)
+VALUES (1, 'Broker Default', 'https://default-broker.com', 'Broker di default per i test', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Inserisci alcuni gruppi di esempio
