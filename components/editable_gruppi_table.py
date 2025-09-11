@@ -383,8 +383,8 @@ class EditableGruppiTable:
         
         for i, (change_key, change_data) in enumerate(changes.items()):
             try:
-                # Aggiorna il record nel database
-                success, message = self.supabase_manager.update_gruppo_pamm(
+                # Aggiorna il record nel database (tabella clienti_gruppi_pamm)
+                success, message = self.supabase_manager.update_cliente_gruppo_pamm(
                     change_data['id'],
                     {change_data['field']: change_data['value']}
                 )

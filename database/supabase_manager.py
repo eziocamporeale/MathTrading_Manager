@@ -390,17 +390,69 @@ class SupabaseManager:
     # ==================== GRUPPI PAMM OPERATIONS ====================
     
     def get_gruppi_pamm(self, active_only: bool = False) -> List[Dict[str, Any]]:
-        """Ottiene tutti i gruppi PAMM dal database"""
+        """Ottiene tutti i clienti dei gruppi PAMM dal database con informazioni del gruppo"""
         try:
             if not self.is_configured:
                 return []
             
-            query = self.supabase.table('gruppi_pamm').select('*')
-            if active_only:
-                query = query.eq('stato', 'Attivo')
+            # Query per ottenere clienti con informazioni del gruppo
+            query = self.supabase.table('clienti_gruppi_pamm').select('''
+                *,
+                gruppi_pamm_gruppi!inner(
+                    id,
+                    nome_gruppo,
+                    manager,
+                    broker_id,
+                    account_pamm,
+                    capitale_totale,
+                    numero_membri_gruppo,
+                    responsabili_gruppo,
+                    stato
+                )
+            ''')
             
             result = query.execute()
-            return result.data if result.data else []
+            if not result.data:
+                return []
+            
+            # Trasforma i dati per compatibilità con il componente esistente
+            transformed_data = []
+            for row in result.data:
+                gruppo_info = row.get('gruppi_pamm_gruppi', {})
+                transformed_row = {
+                    'id': row['id'],
+                    'nome_gruppo': gruppo_info.get('nome_gruppo', ''),
+                    'manager': gruppo_info.get('manager', ''),
+                    'broker_id': gruppo_info.get('broker_id', 0),
+                    'account_pamm': gruppo_info.get('account_pamm', ''),
+                    'capitale_totale': gruppo_info.get('capitale_totale', 0.0),
+                    'numero_membri_gruppo': gruppo_info.get('numero_membri_gruppo', 0),
+                    'responsabili_gruppo': gruppo_info.get('responsabili_gruppo', ''),
+                    'stato': gruppo_info.get('stato', 'ATTIVO'),
+                    'nome_cliente': row.get('nome_cliente', ''),
+                    'importo_cliente': row.get('importo_cliente', 0.0),
+                    'stato_prop': row.get('stato_prop', 'Non svolto'),
+                    'deposito_pamm': row.get('deposito_pamm', ''),
+                    'quota_prop': row.get('quota_prop', 1),
+                    'ciclo_numero': row.get('ciclo_numero', 0),
+                    'fase_prop': row.get('fase_prop', ''),
+                    'operazione_numero': row.get('operazione_numero', ''),
+                    'esito_broker': row.get('esito_broker', ''),
+                    'esito_prop': row.get('esito_prop', ''),
+                    'prelievo_prop': row.get('prelievo_prop', 0.0),
+                    'prelievo_profit': row.get('prelievo_profit', 0.0),
+                    'commissioni_percentuale': row.get('commissioni_percentuale', 25.0),
+                    'credenziali_broker': row.get('credenziali_broker', ''),
+                    'credenziali_prop': row.get('credenziali_prop', ''),
+                    'chi_ha_comprato_prop': row.get('chi_ha_comprato_prop', ''),
+                    'data_creazione': row.get('data_creazione', ''),
+                    'data_aggiornamento': row.get('data_aggiornamento', ''),
+                    'creato_da': row.get('creato_da', ''),
+                    'aggiornato_da': row.get('aggiornato_da', '')
+                }
+                transformed_data.append(transformed_row)
+            
+            return transformed_data
         except Exception as e:
             logging.error(f"❌ Errore recupero gruppi PAMM: {e}")
             return []
