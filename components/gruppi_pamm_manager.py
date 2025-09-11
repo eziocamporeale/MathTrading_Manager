@@ -35,7 +35,7 @@ class GruppiPAMMManager:
         st.markdown("Gestisci i gruppi PAMM e i loro clienti con calcoli automatici")
         
         # Tab per navigazione
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Gruppi PAMM", "👥 Clienti per Gruppo", "📝 Tabella Editabile", "📈 Statistiche"])
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Gruppi PAMM", "👥 Clienti per Gruppo", "📋 Panoramica Gruppi", "📈 Statistiche"])
         
         with tab1:
             self._render_gruppi_tab()
@@ -44,21 +44,104 @@ class GruppiPAMMManager:
             self._render_clienti_tab()
         
         with tab3:
-            self._render_editable_table_tab()
+            self._render_panoramica_tab()
         
         with tab4:
             self._render_statistiche_tab()
     
-    def _render_editable_table_tab(self):
-        """Tab per la tabella editabile in stile Excel"""
+    def _render_panoramica_tab(self):
+        """Tab per panoramica compatta e riassuntiva dei gruppi"""
         
-        st.subheader("📝 Tabella Editabile - Replica Excel")
-        st.markdown("Modifica direttamente le celle come in Excel. Le modifiche vengono salvate automaticamente.")
+        st.subheader("📋 Panoramica Gruppi PAMM")
+        st.markdown("Visualizzazione compatta e riassuntiva di tutti i gruppi e clienti")
         
-        # Usa il componente tabella editabile esistente
-        from components.editable_gruppi_table import EditableGruppiTable
-        editable_table = EditableGruppiTable()
-        editable_table.render_editable_table()
+        # Carica tutti i dati
+        all_data = self.supabase_manager.get_all_gruppi_pamm_for_editable_table()
+        if not all_data:
+            st.warning("Nessun dato disponibile")
+            return
+        
+        # Converti in DataFrame
+        df = pd.DataFrame(all_data)
+        
+        # Raggruppa per gruppo e calcola statistiche
+        gruppi_summary = []
+        for gruppo in df['nome_gruppo'].unique():
+            gruppo_data = df[df['nome_gruppo'] == gruppo]
+            
+            # Calcola statistiche per il gruppo
+            summary = {
+                'Gruppo': gruppo,
+                'Manager': gruppo_data['manager'].iloc[0],
+                'Clienti': len(gruppo_data),
+                'Totale Importi': f"€{gruppo_data['importo_cliente'].sum():,.2f}",
+                'Svolti': len(gruppo_data[gruppo_data['stato_prop'] == 'Svolto']),
+                'Depositati': len(gruppo_data[gruppo_data['deposito_pamm'] == 'Depositata']),
+                'Totale Prelievi Prop': f"€{gruppo_data['prelievo_prop'].sum():,.2f}",
+                'Totale Prelievi Profit': f"€{gruppo_data['prelievo_profit'].sum():,.2f}",
+                'Commissioni Medie': f"{gruppo_data['commissioni_percentuale'].mean():.1f}%",
+                'Stato': gruppo_data['stato'].iloc[0]
+            }
+            gruppi_summary.append(summary)
+        
+        # Crea DataFrame riassuntivo
+        summary_df = pd.DataFrame(gruppi_summary)
+        
+        # Mostra metriche generali
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("📊 Gruppi Totali", len(summary_df))
+        
+        with col2:
+            total_clienti = summary_df['Clienti'].sum()
+            st.metric("👥 Clienti Totali", total_clienti)
+        
+        with col3:
+            total_importi = df['importo_cliente'].sum()
+            st.metric("💰 Importi Totali", f"€{total_importi:,.2f}")
+        
+        with col4:
+            total_svolti = summary_df['Svolti'].sum()
+            st.metric("✅ Svolti Totali", total_svolti)
+        
+        st.divider()
+        
+        # Mostra tabella riassuntiva
+        st.markdown("### 📊 Riepilogo per Gruppo")
+        
+        # Formatta la tabella per una migliore visualizzazione
+        display_df = summary_df.copy()
+        display_df = display_df.set_index('Gruppo')
+        
+        # Usa st.dataframe per una visualizzazione più pulita
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            height=400
+        )
+        
+        # Mostra dettagli clienti in formato compatto
+        st.markdown("### 👥 Dettagli Clienti per Gruppo")
+        
+        for gruppo in df['nome_gruppo'].unique():
+            gruppo_data = df[df['nome_gruppo'] == gruppo]
+            
+            with st.expander(f"📋 {gruppo} - {len(gruppo_data)} clienti"):
+                # Crea tabella compatta per i clienti
+                clienti_display = gruppo_data[['nome_cliente', 'importo_cliente', 'stato_prop', 'deposito_pamm', 'prelievo_prop', 'prelievo_profit']].copy()
+                clienti_display['importo_cliente'] = clienti_display['importo_cliente'].apply(lambda x: f"€{x:,.2f}")
+                clienti_display['prelievo_prop'] = clienti_display['prelievo_prop'].apply(lambda x: f"€{x:,.2f}")
+                clienti_display['prelievo_profit'] = clienti_display['prelievo_profit'].apply(lambda x: f"€{x:,.2f}")
+                
+                # Rinomina le colonne per una migliore visualizzazione
+                clienti_display.columns = ['Cliente', 'Importo', 'Stato Prop', 'Deposito', 'Prelievo Prop', 'Prelievo Profit']
+                
+                st.dataframe(
+                    clienti_display,
+                    use_container_width=True,
+                    hide_index=True
+                )
     
     def _render_gruppi_tab(self):
         """Tab per la gestione dei gruppi PAMM"""
