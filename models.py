@@ -190,6 +190,59 @@ class GruppiPAMM:
     numero_membri_gruppo: int = 0  # Numero membri gruppo (es. 12k, 10k, 7k)
 
 @dataclass
+class GruppoPAMM:
+    """Modello per i gruppi PAMM come entità separate"""
+    id: Optional[int] = None
+    nome_gruppo: str = ""
+    manager: str = ""
+    broker_id: int = 0
+    account_pamm: str = ""
+    capitale_totale: float = 0.0
+    numero_membri_gruppo: int = 0  # Es: 12k, 10k, 7k
+    responsabili_gruppo: str = ""  # Es: "frank andre", "mario"
+    stato: str = "ATTIVO"  # ATTIVO, INATTIVO, SOSPESO
+    note: str = ""
+    data_creazione: datetime = field(default_factory=datetime.now)
+    data_aggiornamento: datetime = field(default_factory=datetime.now)
+    creato_da: str = ""
+    aggiornato_da: str = ""
+    
+    # Calcoli automatici (verranno calcolati dinamicamente)
+    totale_depositi: float = 0.0
+    totale_prelievi_prop: float = 0.0
+    totale_prelievi_profit: float = 0.0
+    totale_commissioni: float = 0.0
+    numero_clienti_attivi: int = 0
+    numero_clienti_svolti: int = 0
+    numero_clienti_depositati: int = 0
+
+@dataclass
+class ClienteGruppoPAMM:
+    """Modello per i clienti all'interno dei gruppi PAMM"""
+    id: Optional[int] = None
+    gruppo_pamm_id: int = 0  # Riferimento al gruppo PAMM
+    nome_cliente: str = ""
+    importo_cliente: float = 0.0
+    stato_prop: StatoProp = StatoProp.NON_SVOLTO
+    deposito_pamm: DepositoPAMM = DepositoPAMM.NON_DEPOSITATA
+    quota_prop: int = 1
+    ciclo_numero: int = 0
+    fase_prop: str = ""
+    operazione_numero: int = 0
+    esito_broker: str = ""
+    esito_prop: str = ""
+    prelievo_prop: float = 0.0
+    prelievo_profit: float = 0.0
+    commissioni_percentuale: float = 25.0
+    credenziali_broker: str = ""
+    credenziali_prop: str = ""
+    chi_ha_comprato_prop: str = ""
+    data_creazione: datetime = field(default_factory=datetime.now)
+    data_aggiornamento: datetime = field(default_factory=datetime.now)
+    creato_da: str = ""
+    aggiornato_da: str = ""
+
+@dataclass
 class Incroci:
     """Modello per gli incroci tra broker, prop, wallet e gruppi PAMM"""
     id: Optional[int] = None
@@ -348,6 +401,98 @@ def gruppi_pamm_to_dict(gruppo: GruppiPAMM) -> Dict[str, Any]:
         'responsabili_gruppo': gruppo.responsabili_gruppo,
         'numero_membri_gruppo': gruppo.numero_membri_gruppo
     }
+
+def gruppo_pamm_to_dict(gruppo: GruppoPAMM) -> Dict[str, Any]:
+    """Converte un oggetto GruppoPAMM in dizionario per Supabase"""
+    return {
+        'id': gruppo.id,
+        'nome_gruppo': gruppo.nome_gruppo,
+        'manager': gruppo.manager,
+        'broker_id': gruppo.broker_id,
+        'account_pamm': gruppo.account_pamm,
+        'capitale_totale': gruppo.capitale_totale,
+        'numero_membri_gruppo': gruppo.numero_membri_gruppo,
+        'responsabili_gruppo': gruppo.responsabili_gruppo,
+        'stato': gruppo.stato,
+        'note': gruppo.note,
+        'data_creazione': gruppo.data_creazione.isoformat() if gruppo.data_creazione else None,
+        'data_aggiornamento': gruppo.data_aggiornamento.isoformat() if gruppo.data_aggiornamento else None,
+        'creato_da': gruppo.creato_da,
+        'aggiornato_da': gruppo.aggiornato_da
+    }
+
+def dict_to_gruppo_pamm(data: Dict[str, Any]) -> GruppoPAMM:
+    """Converte un dizionario da Supabase in oggetto GruppoPAMM"""
+    return GruppoPAMM(
+        id=data.get('id'),
+        nome_gruppo=data.get('nome_gruppo', ''),
+        manager=data.get('manager', ''),
+        broker_id=data.get('broker_id', 0),
+        account_pamm=data.get('account_pamm', ''),
+        capitale_totale=data.get('capitale_totale', 0.0),
+        numero_membri_gruppo=data.get('numero_membri_gruppo', 0),
+        responsabili_gruppo=data.get('responsabili_gruppo', ''),
+        stato=data.get('stato', 'ATTIVO'),
+        note=data.get('note', ''),
+        data_creazione=datetime.fromisoformat(data['data_creazione']) if data.get('data_creazione') else datetime.now(),
+        data_aggiornamento=datetime.fromisoformat(data['data_aggiornamento']) if data.get('data_aggiornamento') else datetime.now(),
+        creato_da=data.get('creato_da', ''),
+        aggiornato_da=data.get('aggiornato_da', '')
+    )
+
+def cliente_gruppo_pamm_to_dict(cliente: ClienteGruppoPAMM) -> Dict[str, Any]:
+    """Converte un oggetto ClienteGruppoPAMM in dizionario per Supabase"""
+    return {
+        'id': cliente.id,
+        'gruppo_pamm_id': cliente.gruppo_pamm_id,
+        'nome_cliente': cliente.nome_cliente,
+        'importo_cliente': cliente.importo_cliente,
+        'stato_prop': cliente.stato_prop.value if cliente.stato_prop else 'Non svolto',
+        'deposito_pamm': cliente.deposito_pamm.value if cliente.deposito_pamm else '',
+        'quota_prop': cliente.quota_prop,
+        'ciclo_numero': cliente.ciclo_numero,
+        'fase_prop': cliente.fase_prop,
+        'operazione_numero': cliente.operazione_numero,
+        'esito_broker': cliente.esito_broker,
+        'esito_prop': cliente.esito_prop,
+        'prelievo_prop': cliente.prelievo_prop,
+        'prelievo_profit': cliente.prelievo_profit,
+        'commissioni_percentuale': cliente.commissioni_percentuale,
+        'credenziali_broker': cliente.credenziali_broker,
+        'credenziali_prop': cliente.credenziali_prop,
+        'chi_ha_comprato_prop': cliente.chi_ha_comprato_prop,
+        'data_creazione': cliente.data_creazione.isoformat() if cliente.data_creazione else None,
+        'data_aggiornamento': cliente.data_aggiornamento.isoformat() if cliente.data_aggiornamento else None,
+        'creato_da': cliente.creato_da,
+        'aggiornato_da': cliente.aggiornato_da
+    }
+
+def dict_to_cliente_gruppo_pamm(data: Dict[str, Any]) -> ClienteGruppoPAMM:
+    """Converte un dizionario da Supabase in oggetto ClienteGruppoPAMM"""
+    return ClienteGruppoPAMM(
+        id=data.get('id'),
+        gruppo_pamm_id=data.get('gruppo_pamm_id', 0),
+        nome_cliente=data.get('nome_cliente', ''),
+        importo_cliente=data.get('importo_cliente', 0.0),
+        stato_prop=StatoProp(data.get('stato_prop', 'Non svolto')),
+        deposito_pamm=DepositoPAMM(data.get('deposito_pamm', '')),
+        quota_prop=data.get('quota_prop', 1),
+        ciclo_numero=data.get('ciclo_numero', 0),
+        fase_prop=data.get('fase_prop', ''),
+        operazione_numero=data.get('operazione_numero', 0),
+        esito_broker=data.get('esito_broker', ''),
+        esito_prop=data.get('esito_prop', ''),
+        prelievo_prop=data.get('prelievo_prop', 0.0),
+        prelievo_profit=data.get('prelievo_profit', 0.0),
+        commissioni_percentuale=data.get('commissioni_percentuale', 25.0),
+        credenziali_broker=data.get('credenziali_broker', ''),
+        credenziali_prop=data.get('credenziali_prop', ''),
+        chi_ha_comprato_prop=data.get('chi_ha_comprato_prop', ''),
+        data_creazione=datetime.fromisoformat(data['data_creazione']) if data.get('data_creazione') else datetime.now(),
+        data_aggiornamento=datetime.fromisoformat(data['data_aggiornamento']) if data.get('data_aggiornamento') else datetime.now(),
+        creato_da=data.get('creato_da', ''),
+        aggiornato_da=data.get('aggiornato_da', '')
+    )
 
 def dict_to_gruppi_pamm(data: Dict[str, Any]) -> GruppiPAMM:
     """Converte un dizionario in oggetto GruppiPAMM"""

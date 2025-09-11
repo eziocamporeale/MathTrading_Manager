@@ -12,8 +12,11 @@ from supabase import create_client, Client
 from models import (
     Broker, PropFirm, Wallet, PackCopiatore, GruppiPAMM, Incroci, User,
     TransazioneWallet, PerformanceHistory, StatoProp, DepositoPAMM,
+    GruppoPAMM, ClienteGruppoPAMM,
     broker_to_dict, dict_to_broker, prop_to_dict, dict_to_prop,
-    gruppi_pamm_to_dict, dict_to_gruppi_pamm
+    gruppi_pamm_to_dict, dict_to_gruppi_pamm,
+    gruppo_pamm_to_dict, dict_to_gruppo_pamm,
+    cliente_gruppo_pamm_to_dict, dict_to_cliente_gruppo_pamm
 )
 
 class SupabaseManager:
@@ -1106,3 +1109,125 @@ class SupabaseManager:
         except Exception as e:
             logging.error(f"❌ Errore recupero gruppi PAMM: {e}")
             return []
+
+
+    # ==================== METODI PER GRUPPI PAMM (NUOVI MODELLI) ====================
+    
+    def get_gruppi_pamm_gruppi(self) -> List[Dict[str, Any]]:
+        """Recupera tutti i gruppi PAMM"""
+        try:
+            result = self.supabase.table('gruppi_pamm_gruppi').select('*').execute()
+            return result.data if result.data else []
+        except Exception as e:
+            logging.error(f"❌ Errore durante il recupero dei gruppi PAMM: {e}")
+            return []
+    
+    def create_gruppo_pamm(self, gruppo: GruppoPAMM) -> Tuple[bool, str]:
+        """Crea un nuovo gruppo PAMM"""
+        try:
+            gruppo_data = gruppo_pamm_to_dict(gruppo)
+            result = self.supabase.table('gruppi_pamm_gruppi').insert(gruppo_data).execute()
+            if result.data:
+                gruppo_id = result.data[0]['id']
+                logging.info(f"✅ Gruppo PAMM creato con successo: {gruppo.nome_gruppo}")
+                return True, f"✅ Gruppo PAMM '{gruppo.nome_gruppo}' creato con successo. ID: {gruppo_id}"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore durante la creazione del gruppo PAMM: {e}")
+            return False, f"❌ Errore durante la creazione: {e}"
+    
+    def update_gruppo_pamm(self, gruppo_id: int, updates: Dict[str, Any]) -> Tuple[bool, str]:
+        """Aggiorna un gruppo PAMM"""
+        try:
+            updates['data_aggiornamento'] = datetime.now().isoformat()
+            updates['aggiornato_da'] = 'admin'  # TODO: prendere da session
+            
+            result = self.supabase.table('gruppi_pamm_gruppi').update(updates).eq('id', gruppo_id).execute()
+            if result.data:
+                logging.info(f"✅ Gruppo PAMM aggiornato con successo: ID {gruppo_id}")
+                return True, f"✅ Gruppo PAMM aggiornato con successo"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore durante l'aggiornamento del gruppo PAMM: {e}")
+            return False, f"❌ Errore durante l'aggiornamento: {e}"
+    
+    def delete_gruppo_pamm(self, gruppo_id: int) -> Tuple[bool, str]:
+        """Elimina un gruppo PAMM"""
+        try:
+            # Prima elimina tutti i clienti del gruppo
+            self.supabase.table('clienti_gruppi_pamm').delete().eq('gruppo_pamm_id', gruppo_id).execute()
+            
+            # Poi elimina il gruppo
+            result = self.supabase.table('gruppi_pamm_gruppi').delete().eq('id', gruppo_id).execute()
+            if result.data:
+                logging.info(f"✅ Gruppo PAMM eliminato con successo: ID {gruppo_id}")
+                return True, f"✅ Gruppo PAMM eliminato con successo"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore durante l'eliminazione del gruppo PAMM: {e}")
+            return False, f"❌ Errore durante l'eliminazione: {e}"
+    
+    def get_all_clienti_gruppi(self) -> List[Dict[str, Any]]:
+        """Recupera tutti i clienti di tutti i gruppi"""
+        try:
+            result = self.supabase.table('clienti_gruppi_pamm').select('*').execute()
+            return result.data if result.data else []
+        except Exception as e:
+            logging.error(f"❌ Errore durante il recupero dei clienti: {e}")
+            return []
+    
+    def get_clienti_by_gruppo(self, gruppo_id: int) -> List[Dict[str, Any]]:
+        """Recupera i clienti di un gruppo specifico"""
+        try:
+            result = self.supabase.table('clienti_gruppi_pamm').select('*').eq('gruppo_pamm_id', gruppo_id).execute()
+            return result.data if result.data else []
+        except Exception as e:
+            logging.error(f"❌ Errore durante il recupero dei clienti del gruppo {gruppo_id}: {e}")
+            return []
+    
+    def create_cliente_gruppo_pamm(self, cliente: ClienteGruppoPAMM) -> Tuple[bool, str]:
+        """Crea un nuovo cliente per un gruppo PAMM"""
+        try:
+            cliente_data = cliente_gruppo_pamm_to_dict(cliente)
+            result = self.supabase.table('clienti_gruppi_pamm').insert(cliente_data).execute()
+            if result.data:
+                cliente_id = result.data[0]['id']
+                logging.info(f"✅ Cliente creato con successo: {cliente.nome_cliente}")
+                return True, f"✅ Cliente '{cliente.nome_cliente}' aggiunto con successo. ID: {cliente_id}"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore durante la creazione del cliente: {e}")
+            return False, f"❌ Errore durante la creazione: {e}"
+    
+    def update_cliente_gruppo_pamm(self, cliente_id: int, updates: Dict[str, Any]) -> Tuple[bool, str]:
+        """Aggiorna un cliente di un gruppo PAMM"""
+        try:
+            updates['data_aggiornamento'] = datetime.now().isoformat()
+            updates['aggiornato_da'] = 'admin'  # TODO: prendere da session
+            
+            result = self.supabase.table('clienti_gruppi_pamm').update(updates).eq('id', cliente_id).execute()
+            if result.data:
+                logging.info(f"✅ Cliente aggiornato con successo: ID {cliente_id}")
+                return True, f"✅ Cliente aggiornato con successo"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore durante l'aggiornamento del cliente: {e}")
+            return False, f"❌ Errore durante l'aggiornamento: {e}"
+    
+    def delete_cliente_gruppo_pamm(self, cliente_id: int) -> Tuple[bool, str]:
+        """Elimina un cliente da un gruppo PAMM"""
+        try:
+            result = self.supabase.table('clienti_gruppi_pamm').delete().eq('id', cliente_id).execute()
+            if result.data:
+                logging.info(f"✅ Cliente eliminato con successo: ID {cliente_id}")
+                return True, f"✅ Cliente eliminato con successo"
+            else:
+                return False, "❌ Errore: Nessun dato restituito"
+        except Exception as e:
+            logging.error(f"❌ Errore durante l'eliminazione del cliente: {e}")
+            return False, f"❌ Errore durante l'eliminazione: {e}"
