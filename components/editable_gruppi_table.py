@@ -116,7 +116,8 @@ class EditableGruppiTable:
         """Rende una riga editabile - TUTTE LE 14 COLONNE DELL'EXCEL"""
         
         # Crea chiave unica usando ID del record e gruppo
-        unique_key_prefix = f"{gruppo_nome}_{record_id}"
+        # Aggiungi un suffisso per garantire unicità globale
+        unique_key_prefix = f"{gruppo_nome}_{record_id}_{id(row)}"
         
         # Crea 14 colonne come nell'Excel
         cols = st.columns(14)
